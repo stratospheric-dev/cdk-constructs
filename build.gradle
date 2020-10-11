@@ -1,0 +1,94 @@
+apply plugin: 'java'
+apply plugin: 'java-library'
+
+group = 'dev.stratospheric'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '14'
+
+repositories {
+    mavenLocal()
+    jcenter()
+    mavenCentral()
+}
+
+ext {
+    cdkVersion = '1.66.0'
+}
+
+dependencies {
+    implementation "software.amazon:core:$cdkVersion"
+    implementation "software.amazon:ec2:$cdkVersion"
+    implementation "software.amazon:elasticloadbalancingv2:$cdkVersion"
+    implementation "software.amazon:autoscaling:$cdkVersion"
+    implementation "software.amazon:rds:$cdkVersion"
+    implementation "software.amazon:secretsmanager:$cdkVersion"
+    implementation "software.amazon:ecr:$cdkVersion"
+    implementation "software.amazon:iam:$cdkVersion"
+    implementation "software.amazon:ecs:$cdkVersion"
+    implementation "software.amazon:ssm:$cdkVersion"
+}
+
+test {
+    useJUnitPlatform {
+        excludeTags "SqsTest", "PostgreSQLTest" // excluding tests relying on docker for the "test" target
+        if (System.getProperty("ci") == "true") {
+            excludeTags "IgnoreInCi"
+        }
+    }
+    jvmArgs '--enable-preview'
+    systemProperty "aws.accessKeyId", "foo" // dummy AWS credentials because the AWS SDK complains otherwise
+    systemProperty "aws.secretKey", "foo"   // dummy AWS credentials because the AWS SDK complains otherwise
+    testLogging {
+        showStackTraces = true
+        exceptionFormat = 'full'
+    }
+}
+
+task integrationTest(type: Test) {
+    useJUnitPlatform {
+        includeTags "PostgreSQLTest", "SqsTest"
+        if (System.getProperty("ci").equals("true")) {
+            excludeTags "IgnoreInCi"
+        }
+    }
+    jvmArgs '--enable-preview'
+    systemProperty "aws.accessKeyId", "foo" // dummy AWS credentials because the AWS SDK complains otherwise
+    systemProperty "aws.secretKey", "foo"   // dummy AWS credentials because the AWS SDK complains otherwise
+    testLogging {
+        showStackTraces = true
+        exceptionFormat = 'full'
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs.add("--enable-preview")
+}
+
+tasks.named("check") {
+    dependsOn integrationTest
+}
+
+test.finalizedBy jacocoTestReport
+integrationTest.finalizedBy jacocoTestReport
+
+spotless {
+    format 'html', {
+        target 'src/main/**/*.html'
+        prettier()
+    }
+    java {
+        googleJavaFormat('1.8').aosp()
+    }
+    kotlin {
+        ktlint()   // has its own section below
+    }
+}
+
+spotbugsMain {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
+build.dependsOn('spotlessCheck')
