@@ -1,5 +1,7 @@
 # Stratospheric CDK Constructs
 
+[ ![Download](https://api.bintray.com/packages/stratospheric/maven-releases/cdk-constructs/images/download.svg) ](https://bintray.com/stratospheric/maven-releases/cdk-constructs/_latestVersion)
+
 A collection of Java CDK constructs that play well together to deploy an application and a database to Amazon ECS.
 
 The constructs have been built to deploy a real application into production and will be updated as this application evolves.
