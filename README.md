@@ -1,5 +1,7 @@
 # Stratospheric CDK Constructs
 
+[ ![Download](https://api.bintray.com/packages/stratospheric/maven-releases/cdk-constructs/images/download.svg) ](https://bintray.com/stratospheric/maven-releases/cdk-constructs/_latestVersion)
+
 A collection of Java CDK constructs that play well together to deploy an application and a database to Amazon ECS.
 
 The constructs have been built to deploy a real application into production and will be updated as this application evolves.
@@ -16,6 +18,31 @@ A short description of the constructs in this project. For a more details descri
 * **[JumpHost](src/main/java/dev/stratospheric/cdk/JumpHost.java)**: creates an EC2 instance in a `Network`'s public subnet that has access to the PostgreSQL instance in a `PostgreSQLDatabase` stack. This EC2 instance can act as a jump host (aka bastion host) to connect to the database from your local machine.
 * **[Service](src/main/java/dev/stratospheric/cdk/Service.java)**: creates an ECS service that deploys a given Docker image into the public subnets of a given `Network`. Allows configuration of things like health check and environment variables.
 
+## Installation
+
+Load the dependency from Bintray by adding this to your `pom.xml`:
+
+```xml
+<repositories>
+  <repository>
+    <snapshots>
+      <enabled>false</enabled>
+    </snapshots>
+    <id>central</id>
+    <name>bintray</name>
+    <url>https://jcenter.bintray.com</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <dependency>
+    <groupId>dev.stratospheric</groupId>
+    <artifactId>cdk-constructs</artifactId>
+    <version>0.0.1</version>
+  </dependency>
+</dependencies>
+```
+
 ## Usage
 
 An example usage of the database construct might look like this: 
@@ -24,42 +51,42 @@ An example usage of the database construct might look like this:
 public class DatabaseApp {
 
   public static void main(final String[] args) {
-    App app = new App();
+  App app = new App();
 
-    String environmentName = (String) app.getNode().tryGetContext("environmentName");
-    requireNonEmpty(environmentName, "context variable 'environmentName' must not be null");
+  String environmentName = (String) app.getNode().tryGetContext("environmentName");
+  requireNonEmpty(environmentName, "context variable 'environmentName' must not be null");
 
-    String applicationName = (String) app.getNode().tryGetContext("applicationName");
-    requireNonEmpty(applicationName, "context variable 'applicationName' must not be null");
+  String applicationName = (String) app.getNode().tryGetContext("applicationName");
+  requireNonEmpty(applicationName, "context variable 'applicationName' must not be null");
 
-    String accountId = (String) app.getNode().tryGetContext("accountId");
-    requireNonEmpty(accountId, "context variable 'accountId' must not be null");
+  String accountId = (String) app.getNode().tryGetContext("accountId");
+  requireNonEmpty(accountId, "context variable 'accountId' must not be null");
 
-    String region = (String) app.getNode().tryGetContext("region");
-    requireNonEmpty(region, "context variable 'region' must not be null");
+  String region = (String) app.getNode().tryGetContext("region");
+  requireNonEmpty(region, "context variable 'region' must not be null");
 
-    Environment awsEnvironment = makeEnv(accountId, region);
+  Environment awsEnvironment = makeEnv(accountId, region);
 
-    ApplicationEnvironment applicationEnvironment = new ApplicationEnvironment(
-        applicationName,
-        environmentName
-    );
+  ApplicationEnvironment applicationEnvironment = new ApplicationEnvironment(
+    applicationName,
+    environmentName
+  );
 
-    PostgresDatabase database = new PostgresDatabase(
-        app,
-        "Database",
-        awsEnvironment,
-        applicationEnvironment,
-        new PostgresDatabase.DatabaseProperties());
+  PostgresDatabase database = new PostgresDatabase(
+    app,
+    "Database",
+    awsEnvironment,
+    applicationEnvironment,
+    new PostgresDatabase.DatabaseProperties());
 
-    app.synth();
+  app.synth();
   }
 
   static Environment makeEnv(String account, String region) {
-    return Environment.builder()
-        .account(account)
-        .region(region)
-        .build();
+  return Environment.builder()
+    .account(account)
+    .region(region)
+    .build();
   }
 
 }
