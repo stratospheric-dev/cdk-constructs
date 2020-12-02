@@ -25,9 +25,51 @@ import static java.util.Collections.singletonList;
  */
 public class Service extends Stack {
 
-    public static class ServiceProperties {
+    public static class DockerImageSource {
         private final String dockerRepositoryName;
         private final String dockerImageTag;
+        private final String dockerImageUrl;
+
+        /**
+         * Loads a Docker image from the given URL.
+         */
+        public DockerImageSource(String dockerImageUrl) {
+            Objects.requireNonNull(dockerImageUrl);
+            this.dockerImageUrl = dockerImageUrl;
+            this.dockerImageTag = null;
+            this.dockerRepositoryName = null;
+        }
+
+        /**
+         * Loads a Docker image from the given ECR repository and image tag.
+         */
+        public DockerImageSource(String dockerRepositoryName, String dockerImageTag) {
+            Objects.requireNonNull(dockerRepositoryName);
+            Objects.requireNonNull(dockerImageTag);
+            this.dockerRepositoryName = dockerRepositoryName;
+            this.dockerImageTag = dockerImageTag;
+            this.dockerImageUrl = null;
+        }
+
+        public boolean isEcrSource() {
+            return this.dockerRepositoryName != null;
+        }
+
+        public String getDockerRepositoryName() {
+            return dockerRepositoryName;
+        }
+
+        public String getDockerImageTag() {
+            return dockerImageTag;
+        }
+
+        public String getDockerImageUrl() {
+            return dockerImageUrl;
+        }
+    }
+
+    public static class ServiceProperties {
+        private final DockerImageSource dockerImageSource;
         private final Map<String, String> environmentVariables;
         private final List<String> securityGroupIdsToGrantIngressFromEcs;
         private int healthCheckIntervalSeconds = 15;
@@ -48,21 +90,15 @@ public class Service extends Stack {
          * Knobs and dials you can configure to run a Docker image in an ECS service. The default values are set in a way
          * to work out of the box with a Spring Boot application.
          *
-         * @param dockerRepositoryName                  the name of the ECR repository from which to load Docker images.
-         * @param dockerImageTag                        the tag of the Docker image to deploy. The Docker image will be loaded from the
-         *                                              dockerRepository specified by <code>dockerRepositoryName</code>, so you don't need
-         *                                              to specify the name of the image (we're assuming that the Docker repository is only
-         *                                              used for images of the application you want to run).
+         * @param dockerImageSource                     the source from where to load the Docker image that we want to deploy.
          * @param securityGroupIdsToGrantIngressFromEcs Ids of the security groups that the ECS containers should be granted access to.
          * @param environmentVariables                  the environment variables provided to the Java runtime within the Docker containers.
          */
         public ServiceProperties(
-                String dockerRepositoryName,
-                String dockerImageTag,
+                DockerImageSource dockerImageSource,
                 List<String> securityGroupIdsToGrantIngressFromEcs,
                 Map<String, String> environmentVariables) {
-            this.dockerRepositoryName = dockerRepositoryName;
-            this.dockerImageTag = dockerImageTag;
+            this.dockerImageSource = dockerImageSource;
             this.environmentVariables = environmentVariables;
             this.securityGroupIdsToGrantIngressFromEcs = securityGroupIdsToGrantIngressFromEcs;
         }
@@ -287,9 +323,6 @@ public class Service extends Stack {
                                 .build()))
                 .build();
 
-        IRepository dockerRepository = Repository.fromRepositoryName(this, "ecrRepository", serviceProperties.dockerRepositoryName);
-        dockerRepository.grantPull(ecsTaskExecutionRole);
-
         Role ecsTaskRole = Role.Builder.create(this, "ecsTaskRole")
                 .assumedBy(ServicePrincipal.Builder.create("ecs-tasks.amazonaws.com").build())
                 .path("/")
@@ -313,11 +346,20 @@ public class Service extends Stack {
                                 .build()))
                 .build();
 
+        String dockerRepositoryUrl = null;
+        if (serviceProperties.dockerImageSource.isEcrSource()) {
+            IRepository dockerRepository = Repository.fromRepositoryName(this, "ecrRepository", serviceProperties.dockerImageSource.getDockerRepositoryName());
+            dockerRepository.grantPull(ecsTaskExecutionRole);
+            dockerRepositoryUrl = dockerRepository.repositoryUriForTag(serviceProperties.dockerImageSource.getDockerImageTag());
+        } else {
+            dockerRepositoryUrl = serviceProperties.dockerImageSource.dockerImageUrl;
+        }
+
         CfnTaskDefinition.ContainerDefinitionProperty container = CfnTaskDefinition.ContainerDefinitionProperty.builder()
                 .name(containerName(applicationEnvironment))
                 .cpu(serviceProperties.cpu)
                 .memory(serviceProperties.memory)
-                .image(dockerRepository.repositoryUriForTag(serviceProperties.dockerImageTag))
+                .image(dockerRepositoryUrl)
                 .logConfiguration(CfnTaskDefinition.LogConfigurationProperty.builder()
                         .logDriver("awslogs")
                         .options(Map.of(
