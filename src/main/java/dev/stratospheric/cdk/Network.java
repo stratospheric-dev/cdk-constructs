@@ -1,7 +1,10 @@
 package dev.stratospheric.cdk;
 
 import org.jetbrains.annotations.NotNull;
-import software.amazon.awscdk.core.*;
+import org.jetbrains.annotations.Nullable;
+import software.amazon.awscdk.core.Construct;
+import software.amazon.awscdk.core.Environment;
+import software.amazon.awscdk.core.Tags;
 import software.amazon.awscdk.services.ec2.*;
 import software.amazon.awscdk.services.ecs.Cluster;
 import software.amazon.awscdk.services.ecs.ICluster;
@@ -11,46 +14,25 @@ import software.amazon.awscdk.services.ssm.StringParameter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 
 /**
  * Creates a base network for an application served by ECS. The network stack contains a VPC,
  * two public and two isolated subnets, an ECS cluster, and an internet-facing load balancer with an HTTP and
- * an HTTPS listener. The listeners can be used in other stacks to attach to an ECS service,
+ * an optional HTTPS listener. The listeners can be used in other stacks to attach to an ECS service,
  * for instance.
  * <p>
- * The stack exposes the following output parameters in the SSM parameter store to be used in other stacks:
+ * The construct exposes some output parameters to be used by other constructs. You can access them by:
  * <ul>
- *     <li><strong>&lt;environmentName&gt;-Network-vpcId:</strong> ID of the VPC created in this stack</li>
- *     <li><strong>&lt;environmentName&gt;-Network-httpListenerArn:</strong> ARN of the load balancer's HTTP listener</li>
- *     <li><strong>&lt;environmentName&gt;-Network-httpsListenerArn:</strong> ARN of the load balancer's HTTPS listener</li>
- *     <li><strong>&lt;environmentName&gt;-Network-loadBalancerSecurityGroupId:</strong> ID of the load balancer's security group</li>
- *     <li><strong>&lt;environmentName&gt;-Network-ecsClusterName:</strong> name of the ECS cluster created in this stack</li>
- *     <li><strong>&lt;environmentName&gt;-Network-availabilityZoneOne:</strong> name of the first AZ of this stack's VPC</li>
- *     <li><strong>&lt;environmentName&gt;-Network-availabilityZoneTwo:</strong> name of the second AZ of this stack's VPC</li>
- *     <li><strong>&lt;environmentName&gt;-Network-isolatedSubnetIdOne:</strong> ID of the first isolated subnet of this stack's VPC</li>
- *     <li><strong>&lt;environmentName&gt;-Network-isolatedSubnetIdTwo:</strong> ID of the second isolated subnet of this stack's VPC</li>
- *     <li><strong>&lt;environmentName&gt;-Network-publicSubnetIdOne:</strong> ID of the first public subnet of this stack's VPC</li>
- *     <li><strong>&lt;environmentName&gt;-Network-publicSubnetIdTwo:</strong> ID of the second public subnet of this stack's VPC</li>
+ *     <li>calling {@link #getOutputParameters()} to load the output parameters from a {@link Network} instance</li>
+ *     <li>calling the static method {@link #getOutputParametersFromParameterStore(Construct, String)} to load them from the
+ *     parameter store (requires that a {@link Network} construct has already been provisioned in a previous stack) </li>
  * </ul>
- * The static getter methods provide a convenient access to retrieve these parameters from the parameter store
- * for use in other stacks.
  */
-public class Network extends Stack {
-
-    public static class NetworkProperties {
-        private final String sslCertificateArn;
-
-        /**
-         * @param sslCertificateArn the ARN of the SSL certificate that the load balancer will use
-         *                          to terminate HTTPS communication.
-         */
-        public NetworkProperties(String sslCertificateArn) {
-            Objects.requireNonNull(sslCertificateArn);
-            this.sslCertificateArn = sslCertificateArn;
-        }
-    }
+public class Network extends Construct {
 
     private final IVpc vpc;
     private final String environmentName;
@@ -65,12 +47,9 @@ public class Network extends Stack {
             final String id,
             final Environment environment,
             final String environmentName,
-            final NetworkProperties networkProperties) {
+            final NetworkInputParameters networkInputParameters) {
 
-        super(scope, id, StackProps.builder()
-                .env(environment)
-                .stackName(environmentName + "-Network")
-                .build());
+        super(scope, id);
 
         this.environmentName = environmentName;
 
@@ -84,7 +63,7 @@ public class Network extends Stack {
                 .clusterName(prefixWithEnvironmentName("ecsCluster"))
                 .build();
 
-        createLoadBalancer(vpc, networkProperties.sslCertificateArn);
+        createLoadBalancer(vpc, networkInputParameters.getSslCertificateArn());
 
         Tags.of(this).add("environment", environmentName);
     }
@@ -97,6 +76,10 @@ public class Network extends Stack {
         return httpListener;
     }
 
+    /**
+     * The load balancer's HTTPS listener. May be null if the load balancer is configured for HTTP only!
+     */
+    @Nullable
     public IApplicationListener getHttpsListener() {
         return httpsListener;
     }
@@ -149,7 +132,7 @@ public class Network extends Stack {
      */
     private void createLoadBalancer(
             final IVpc vpc,
-            final String sslCertificateArn) {
+            final Optional<String> sslCertificateArn) {
 
         loadbalancerSecurityGroup = SecurityGroup.Builder.create(this, "loadbalancerSecurityGroup")
                 .securityGroupName(prefixWithEnvironmentName("loadbalancerSecurityGroup"))
@@ -188,17 +171,20 @@ public class Network extends Stack {
                 .targetGroups(Collections.singletonList(dummyTargetGroup))
                 .build());
 
-        IListenerCertificate certificate = ListenerCertificate.fromArn(sslCertificateArn);
-        httpsListener = loadBalancer.addListener("httpsListener", BaseApplicationListenerProps.builder()
-                .port(443)
-                .protocol(ApplicationProtocol.HTTPS)
-                .certificates(Collections.singletonList(certificate))
-                .open(true)
-                .build());
+        if (sslCertificateArn.isPresent()) {
+            IListenerCertificate certificate = ListenerCertificate.fromArn(sslCertificateArn.get());
+            httpsListener = loadBalancer.addListener("httpsListener", BaseApplicationListenerProps.builder()
+                    .port(443)
+                    .protocol(ApplicationProtocol.HTTPS)
+                    .certificates(Collections.singletonList(certificate))
+                    .open(true)
+                    .build());
 
-        httpsListener.addTargetGroups("https-dummy", AddApplicationTargetGroupsProps.builder()
-                .targetGroups(Collections.singletonList(dummyTargetGroup))
-                .build());
+
+            httpsListener.addTargetGroups("https-dummy", AddApplicationTargetGroupsProps.builder()
+                    .targetGroups(Collections.singletonList(dummyTargetGroup))
+                    .build());
+        }
 
         createOutputParameters();
     }
@@ -232,10 +218,17 @@ public class Network extends Stack {
                 .stringValue(this.httpListener.getListenerArn())
                 .build();
 
-        StringParameter httpsListener = StringParameter.Builder.create(this, "httpsListener")
-                .parameterName(createParameterName(environmentName, PARAMETER_HTTPS_LISTENER))
-                .stringValue(this.httpsListener.getListenerArn())
-                .build();
+        if (this.httpsListener != null) {
+            StringParameter httpsListener = StringParameter.Builder.create(this, "httpsListener")
+                    .parameterName(createParameterName(environmentName, PARAMETER_HTTPS_LISTENER))
+                    .stringValue(this.httpsListener.getListenerArn())
+                    .build();
+        } else {
+            StringParameter httpsListener = StringParameter.Builder.create(this, "httpsListener")
+                    .parameterName(createParameterName(environmentName, PARAMETER_HTTPS_LISTENER))
+                    .stringValue("null")
+                    .build();
+        }
 
         StringParameter loadbalancerSecurityGroup = StringParameter.Builder.create(this, "loadBalancerSecurityGroupId")
                 .parameterName(createParameterName(environmentName, PARAMETER_LOADBALANCER_SECURITY_GROUP_ID))
@@ -280,7 +273,40 @@ public class Network extends Stack {
                 .stringValue(this.vpc.getPublicSubnets().get(1).getSubnetId())
                 .build();
 
+    }
 
+    /**
+     * Collects the output parameters of this construct that might be of interest to other constructs.
+     */
+    public NetworkOutputParameters getOutputParameters() {
+        return new NetworkOutputParameters(
+                this.vpc.getVpcId(),
+                this.httpListener.getListenerArn(),
+                this.httpsListener != null ? Optional.of(this.httpsListener.getListenerArn()) : Optional.empty(),
+                this.loadbalancerSecurityGroup.getSecurityGroupId(),
+                this.ecsCluster.getClusterName(),
+                this.vpc.getIsolatedSubnets().stream().map(ISubnet::getSubnetId).collect(Collectors.toList()),
+                this.vpc.getPublicSubnets().stream().map(ISubnet::getSubnetId).collect(Collectors.toList()),
+                this.vpc.getAvailabilityZones());
+    }
+
+    /**
+     * Collects the output parameters of an already deployed {@link Network} construct from the parameter store.
+     *
+     * @param scope           the construct in which we need the output parameters
+     * @param environmentName the name of the environment for which to load the output parameters. The deployed {@link Network}
+     *                        construct must have been deployed into this environment.
+     */
+    public static NetworkOutputParameters getOutputParametersFromParameterStore(Construct scope, String environmentName) {
+        return new NetworkOutputParameters(
+                getVpcIdFromParameterStore(scope, environmentName),
+                getHttpListenerArnFromParameterStore(scope, environmentName),
+                getHttpsListenerArnFromParameterStore(scope, environmentName),
+                getLoadbalancerSecurityGroupIdFromParameterStore(scope, environmentName),
+                getEcsClusterNameFromParameterStore(scope, environmentName),
+                getIsolatedSubnetsFromParameterStore(scope, environmentName),
+                getPublicSubnetsFromParameterStore(scope, environmentName),
+                getAvailabilityZonesFromParameterStore(scope, environmentName));
     }
 
     @NotNull
@@ -288,50 +314,37 @@ public class Network extends Stack {
         return environmentName + "-Network-" + parameterName;
     }
 
-    /**
-     * Gets the VPC ID of a deployed network stack created for a given environment from the parameter store.
-     */
-    public static String getVpcId(Construct scope, String environmentName) {
+    private static String getVpcIdFromParameterStore(Construct scope, String environmentName) {
         return StringParameter.fromStringParameterName(scope, PARAMETER_VPC_ID, createParameterName(environmentName, PARAMETER_VPC_ID))
                 .getStringValue();
     }
 
-    /**
-     * Gets the ARN of the HTTP listener of a deployed network stack created for a given environment from the parameter store.
-     */
-    public static String getHttpListenerArn(Construct scope, String environmentName) {
+    private static String getHttpListenerArnFromParameterStore(Construct scope, String environmentName) {
         return StringParameter.fromStringParameterName(scope, PARAMETER_HTTP_LISTENER, createParameterName(environmentName, PARAMETER_HTTP_LISTENER))
                 .getStringValue();
     }
 
-    /**
-     * Gets the ARN of the HTTPS listener in a deployed network stack created for a given environment from the parameter store.
-     */
-    public static String getHttpsListenerArn(Construct scope, String environmentName) {
-        return StringParameter.fromStringParameterName(scope, PARAMETER_HTTPS_LISTENER, createParameterName(environmentName, PARAMETER_HTTPS_LISTENER))
+    private static Optional<String> getHttpsListenerArnFromParameterStore(Construct scope, String environmentName) {
+        String value = StringParameter.fromStringParameterName(scope, PARAMETER_HTTPS_LISTENER, createParameterName(environmentName, PARAMETER_HTTPS_LISTENER))
                 .getStringValue();
+        if (value.equals("null")) {
+            return Optional.empty();
+        } else {
+            return Optional.ofNullable(value);
+        }
     }
 
-    /**
-     * Gets the ID of the load balancer's security group in a deployed network stack created for a given environment from the parameter store.
-     */
-    public static String getLoadbalancerSecurityGroupId(Construct scope, String environmentName) {
+    private static String getLoadbalancerSecurityGroupIdFromParameterStore(Construct scope, String environmentName) {
         return StringParameter.fromStringParameterName(scope, PARAMETER_LOADBALANCER_SECURITY_GROUP_ID, createParameterName(environmentName, PARAMETER_LOADBALANCER_SECURITY_GROUP_ID))
                 .getStringValue();
     }
 
-    /**
-     * Gets the name of the ECS cluster in a deployed network stack created for a given environment from the parameter store.
-     */
-    public static String getEcsClusterName(Construct scope, String environmentName) {
+    private static String getEcsClusterNameFromParameterStore(Construct scope, String environmentName) {
         return StringParameter.fromStringParameterName(scope, PARAMETER_ECS_CLUSTER_NAME, createParameterName(environmentName, PARAMETER_ECS_CLUSTER_NAME))
                 .getStringValue();
     }
 
-    /**
-     * Gets the IDs of the isolated subnets in a deployed network stack created for a given environment from the parameter store.
-     */
-    public static List<String> getIsolatedSubnets(Construct scope, String environmentName) {
+    private static List<String> getIsolatedSubnetsFromParameterStore(Construct scope, String environmentName) {
 
         String subnetOneId = StringParameter.fromStringParameterName(scope, PARAMETER_ISOLATED_SUBNET_ONE, createParameterName(environmentName, PARAMETER_ISOLATED_SUBNET_ONE))
                 .getStringValue();
@@ -342,10 +355,7 @@ public class Network extends Stack {
         return asList(subnetOneId, subnetTwoId);
     }
 
-    /**
-     * Gets the IDs of the public subnets in a deployed network stack created for a given environment from the parameter store.
-     */
-    public static List<String> getPublicSubnets(Construct scope, String environmentName) {
+    private static List<String> getPublicSubnetsFromParameterStore(Construct scope, String environmentName) {
 
         String subnetOneId = StringParameter.fromStringParameterName(scope, PARAMETER_PUBLIC_SUBNET_ONE, createParameterName(environmentName, PARAMETER_PUBLIC_SUBNET_ONE))
                 .getStringValue();
@@ -356,10 +366,7 @@ public class Network extends Stack {
         return asList(subnetOneId, subnetTwoId);
     }
 
-    /**
-     * Gets the names of the availability zones of the VPC in a deployed network stack created for a given environment from the parameter store.
-     */
-    public static List<String> getAvailabilityZones(Construct scope, String environmentName) {
+    private static List<String> getAvailabilityZonesFromParameterStore(Construct scope, String environmentName) {
 
         String availabilityZoneOne = StringParameter.fromStringParameterName(scope, PARAMETER_AVAILABILITY_ZONE_ONE, createParameterName(environmentName, PARAMETER_AVAILABILITY_ZONE_ONE))
                 .getStringValue();
@@ -370,4 +377,114 @@ public class Network extends Stack {
         return asList(availabilityZoneOne, availabilityZoneTwo);
     }
 
+    public static class NetworkInputParameters {
+        private final Optional<String> sslCertificateArn;
+
+        /**
+         * @param sslCertificateArn the ARN of the SSL certificate that the load balancer will use
+         *                          to terminate HTTPS communication. If no SSL certificate is passed,
+         *                          the load balancer will only listen to plain HTTP.
+         */
+        public NetworkInputParameters(String sslCertificateArn) {
+            Objects.requireNonNull(sslCertificateArn);
+            this.sslCertificateArn = Optional.of(sslCertificateArn);
+        }
+
+        public NetworkInputParameters() {
+            this.sslCertificateArn = Optional.empty();
+        }
+
+        public Optional<String> getSslCertificateArn() {
+            return sslCertificateArn;
+        }
+    }
+
+    public static class NetworkOutputParameters {
+
+        private final String vpcId;
+        private final String httpListenerArn;
+        private final Optional<String> httpsListenerArn;
+        private final String loadbalancerSecurityGroupId;
+        private final String ecsClusterName;
+        private final List<String> isolatedSubnets;
+        private final List<String> publicSubnets;
+        private final List<String> availabilityZones;
+
+        public NetworkOutputParameters(
+                String vpcId,
+                String httpListenerArn,
+                Optional<String> httpsListenerArn,
+                String loadbalancerSecurityGroupId,
+                String ecsClusterName,
+                List<String> isolatedSubnets,
+                List<String> publicSubnets,
+                List<String> availabilityZones) {
+            this.vpcId = vpcId;
+            this.httpListenerArn = httpListenerArn;
+            this.httpsListenerArn = httpsListenerArn;
+            this.loadbalancerSecurityGroupId = loadbalancerSecurityGroupId;
+            this.ecsClusterName = ecsClusterName;
+            this.isolatedSubnets = isolatedSubnets;
+            this.publicSubnets = publicSubnets;
+            this.availabilityZones = availabilityZones;
+        }
+
+        /**
+         * The VPC ID.
+         */
+        public String getVpcId() {
+            return this.vpcId;
+        }
+
+        /**
+         * The ARN of the HTTP listener.
+         */
+        public String getHttpListenerArn() {
+            return this.httpListenerArn;
+        }
+
+        /**
+         * The ARN of the HTTPS listener.
+         */
+        public Optional<String> getHttpsListenerArn() {
+            return this.httpsListenerArn;
+        }
+
+        /**
+         * The ID of the load balancer's security group.
+         */
+        public String getLoadbalancerSecurityGroupId() {
+            return this.loadbalancerSecurityGroupId;
+        }
+
+        /**
+         * The name of the ECS cluster.
+         */
+        public String getEcsClusterName() {
+            return this.ecsClusterName;
+        }
+
+        /**
+         * The IDs of the isolated subnets.
+         */
+        public List<String> getIsolatedSubnets() {
+            return this.isolatedSubnets;
+        }
+
+        /**
+         * The IDs of the public subnets.
+         */
+        public List<String> getPublicSubnets() {
+            return this.publicSubnets;
+        }
+
+        /**
+         * The names of the availability zones of the VPC.
+         */
+        public List<String> getAvailabilityZones() {
+            return this.availabilityZones;
+        }
+
+
+    }
 }

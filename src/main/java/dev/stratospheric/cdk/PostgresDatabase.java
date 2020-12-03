@@ -3,8 +3,6 @@ package dev.stratospheric.cdk;
 import org.jetbrains.annotations.NotNull;
 import software.amazon.awscdk.core.Construct;
 import software.amazon.awscdk.core.Environment;
-import software.amazon.awscdk.core.Stack;
-import software.amazon.awscdk.core.StackProps;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroup;
 import software.amazon.awscdk.services.ec2.ISecurityGroup;
 import software.amazon.awscdk.services.ec2.SecurityGroup;
@@ -42,46 +40,7 @@ import java.util.Objects;
  * The static getter methods provide a convenient access to retrieve these parameters from the parameter store
  * for use in other stacks.
  */
-public class PostgresDatabase extends Stack {
-
-    public static class DatabaseProperties {
-        private int storageInGb = 20;
-        private String instanceClass = "db.t2.micro";
-        private String postgresVersion = "11.5";
-
-        /**
-         * The storage allocated for the database in GB.
-         * <p>
-         * Default: 20.
-         */
-        public DatabaseProperties withStorageInGb(int storageInGb) {
-            this.storageInGb = storageInGb;
-            return this;
-        }
-
-        /**
-         * The class of the database instance.
-         * <p>
-         * Default: "db.t2.micro".
-         */
-        public DatabaseProperties withInstanceClass(String instanceClass) {
-            Objects.requireNonNull(instanceClass);
-            this.instanceClass = instanceClass;
-            return this;
-        }
-
-        /**
-         * The version of the PostGres database.
-         * <p>
-         * Default: "11.5".
-         */
-        public DatabaseProperties withPostgresVersion(String postgresVersion) {
-            Objects.requireNonNull(postgresVersion);
-            this.postgresVersion = postgresVersion;
-            return this;
-        }
-
-    }
+public class PostgresDatabase extends Construct {
 
     private final CfnSecurityGroup databaseSecurityGroup;
     private final CfnDBInstance dbInstance;
@@ -93,24 +52,21 @@ public class PostgresDatabase extends Stack {
             final String id,
             final Environment awsEnvironment,
             final ApplicationEnvironment applicationEnvironment,
-            final DatabaseProperties databaseProperties) {
+            final DatabaseInputParameters databaseInputParameters) {
 
-        super(scope, id, StackProps.builder()
-                .env(awsEnvironment)
-                .stackName(applicationEnvironment.prefix("Database"))
-                .build());
+        super(scope, id);
 
         this.applicationEnvironment = applicationEnvironment;
 
         // Sadly, we cannot use VPC.fromLookup() to resolve a VPC object from this VpcId, because it's broken
         // (https://github.com/aws/aws-cdk/issues/3600). So, we have to resolve all properties we need from the VPC
         // via SSM parameter store.
-        String vpcId = Network.getVpcId(this, applicationEnvironment.getEnvironmentName());
+        Network.NetworkOutputParameters networkOutputParameters = Network.getOutputParametersFromParameterStore(this, applicationEnvironment.getEnvironmentName());
 
         String username = sanitizeDbName(applicationEnvironment.prefix("dbUser"));
 
         databaseSecurityGroup = CfnSecurityGroup.Builder.create(this, "databaseSecurityGroup")
-                .vpcId(vpcId)
+                .vpcId(networkOutputParameters.getVpcId())
                 .groupDescription("Security Group for the database instance")
                 .groupName(applicationEnvironment.prefix("dbSecurityGroup"))
                 .build();
@@ -130,17 +86,17 @@ public class PostgresDatabase extends Stack {
         CfnDBSubnetGroup subnetGroup = CfnDBSubnetGroup.Builder.create(this, "dbSubnetGroup")
                 .dbSubnetGroupDescription("Subnet group for the RDS instance")
                 .dbSubnetGroupName(applicationEnvironment.prefix("dbSubnetGroup"))
-                .subnetIds(Network.getIsolatedSubnets(this, applicationEnvironment.getEnvironmentName()))
+                .subnetIds(networkOutputParameters.getIsolatedSubnets())
                 .build();
 
         dbInstance = CfnDBInstance.Builder.create(this, "postgresInstance")
-                .allocatedStorage(String.valueOf(databaseProperties.storageInGb))
-                .availabilityZone(Network.getAvailabilityZones(this, applicationEnvironment.getEnvironmentName()).get(0))
-                .dbInstanceClass(databaseProperties.instanceClass)
+                .allocatedStorage(String.valueOf(databaseInputParameters.storageInGb))
+                .availabilityZone(networkOutputParameters.getAvailabilityZones().get(0))
+                .dbInstanceClass(databaseInputParameters.instanceClass)
                 .dbName(sanitizeDbName(applicationEnvironment.prefix("database")))
                 .dbSubnetGroupName(subnetGroup.getDbSubnetGroupName())
                 .engine("postgres")
-                .engineVersion(databaseProperties.postgresVersion)
+                .engineVersion(databaseInputParameters.postgresVersion)
                 .masterUsername(username)
                 .masterUserPassword(databaseSecret.secretValueFromJson("password").toString())
                 .publiclyAccessible(false)
@@ -210,46 +166,153 @@ public class PostgresDatabase extends Stack {
         return applicationEnvironment.getEnvironmentName() + "-" + applicationEnvironment.getApplicationName() + "-Database-" + parameterName;
     }
 
-    /**
-     * Gets the URL of the Postgres instance in a deployed database stack created for a given environment from the parameter store.
-     */
-    public static String getEndpointAddress(Construct scope, ApplicationEnvironment environment) {
+    public DatabaseOutputParameters getOutputParameters(){
+        return new DatabaseOutputParameters(
+                this.dbInstance.getAttrEndpointAddress(),
+                this.dbInstance.getAttrEndpointPort(),
+                this.dbInstance.getDbName(),
+                this.databaseSecurityGroup.getAttrGroupId(),
+                this.databaseSecret.getSecretArn()
+        );
+    }
+
+    public DatabaseOutputParameters getOutputParametersFromParameterStore(Construct scope, ApplicationEnvironment environment){
+        return new DatabaseOutputParameters(
+                getEndpointAddress(scope, environment),
+                getEndpointPort(scope, environment),
+                getDbName(scope, environment),
+                getDatabaseSecurityGroupId(scope, environment),
+                getDatabaseSecretArn(scope, environment)
+        );
+    }
+
+
+    private static String getEndpointAddress(Construct scope, ApplicationEnvironment environment) {
         return StringParameter.fromStringParameterName(scope, PARAMETER_ENDPOINT_ADDRESS, createParameterName(environment, PARAMETER_ENDPOINT_ADDRESS))
                 .getStringValue();
     }
 
-    /**
-     * Gets the port of the Postgres instance in a deployed database stack created for a given environment from the parameter store.
-     */
-    public static String getEndpointPort(Construct scope, ApplicationEnvironment environment) {
+
+    private static String getEndpointPort(Construct scope, ApplicationEnvironment environment) {
         return StringParameter.fromStringParameterName(scope, PARAMETER_ENDPOINT_PORT, createParameterName(environment, PARAMETER_ENDPOINT_PORT))
                 .getStringValue();
     }
 
-    /**
-     * Gets the database name of the Postgres instance in a deployed database stack created for a given environment from the parameter store.
-     */
-    public static String getDbName(Construct scope, ApplicationEnvironment environment) {
+
+    private static String getDbName(Construct scope, ApplicationEnvironment environment) {
         return StringParameter.fromStringParameterName(scope, PARAMETER_DATABASE_NAME, createParameterName(environment, PARAMETER_DATABASE_NAME))
                 .getStringValue();
     }
 
-    /**
-     * Gets the ID of the secret containing username and password in a deployed database stack created for a given environment from the parameter store.
-     */
-    public static ISecret getDatabaseSecret(Construct scope, ApplicationEnvironment environment) {
+
+    private static String getDatabaseSecretArn(Construct scope, ApplicationEnvironment environment) {
         String secretArn = StringParameter.fromStringParameterName(scope, PARAMETER_SECRET_ARN, createParameterName(environment, PARAMETER_SECRET_ARN))
                 .getStringValue();
-        return Secret.fromSecretArn(scope, "databaseSecret", secretArn);
+        return secretArn;
     }
 
-    /**
-     * Gets the ID of the database's security group in a deployed database stack created for a given environment from the parameter store.
-     */
-    public static ISecurityGroup getDatabaseSecurityGroup(Construct scope, ApplicationEnvironment environment) {
+
+    private static String getDatabaseSecurityGroupId(Construct scope, ApplicationEnvironment environment) {
         String securityGroupId = StringParameter.fromStringParameterName(scope, PARAMETER_SECURITY_GROUP_ID, createParameterName(environment, PARAMETER_SECURITY_GROUP_ID))
                 .getStringValue();
-        return SecurityGroup.fromSecurityGroupId(scope, "databaseSecurityGroup", securityGroupId);
+        return securityGroupId;
+    }
+
+    public static class DatabaseInputParameters {
+        private int storageInGb = 20;
+        private String instanceClass = "db.t2.micro";
+        private String postgresVersion = "11.5";
+
+        /**
+         * The storage allocated for the database in GB.
+         * <p>
+         * Default: 20.
+         */
+        public DatabaseInputParameters withStorageInGb(int storageInGb) {
+            this.storageInGb = storageInGb;
+            return this;
+        }
+
+        /**
+         * The class of the database instance.
+         * <p>
+         * Default: "db.t2.micro".
+         */
+        public DatabaseInputParameters withInstanceClass(String instanceClass) {
+            Objects.requireNonNull(instanceClass);
+            this.instanceClass = instanceClass;
+            return this;
+        }
+
+        /**
+         * The version of the PostGres database.
+         * <p>
+         * Default: "11.5".
+         */
+        public DatabaseInputParameters withPostgresVersion(String postgresVersion) {
+            Objects.requireNonNull(postgresVersion);
+            this.postgresVersion = postgresVersion;
+            return this;
+        }
+
+    }
+
+    public static class DatabaseOutputParameters {
+        private final String endpointAddress;
+        private final String endpointPort;
+        private final String dbName;
+        private final String databaseSecretArn;
+        private final String databaseSecurityGroupId;
+
+        public DatabaseOutputParameters(
+                String endpointAddress,
+                String endpointPort,
+                String dbName,
+                String databaseSecretArn,
+                String databaseSecurityGroupId
+        ) {
+            this.endpointAddress = endpointAddress;
+            this.endpointPort = endpointPort;
+            this.dbName = dbName;
+            this.databaseSecretArn = databaseSecretArn;
+            this.databaseSecurityGroupId = databaseSecurityGroupId;
+        }
+
+        /**
+         * The URL of the Postgres instance.
+         */
+        public String getEndpointAddress() {
+            return endpointAddress;
+        }
+
+
+        /**
+         * The port of the Postgres instance.
+         */
+        public String getEndpointPort() {
+            return endpointPort;
+        }
+
+        /**
+         * The database name of the Postgres instance.
+         */
+        public String getDbName() {
+            return dbName;
+        }
+
+        /**
+         * The secret containing username and password.
+         */
+        public String getDatabaseSecretArn() {
+            return databaseSecretArn;
+        }
+
+        /**
+         * The database's security group.
+         */
+        public String getDatabaseSecurityGroupId() {
+            return databaseSecurityGroupId;
+        }
     }
 
 }
