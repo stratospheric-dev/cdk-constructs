@@ -16,8 +16,8 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 group = 'dev.stratospheric'
-version = '0.0.2'
-sourceCompatibility = '13'
+version = '0.0.3'
+sourceCompatibility = '11'
 
 repositories {
     mavenLocal()

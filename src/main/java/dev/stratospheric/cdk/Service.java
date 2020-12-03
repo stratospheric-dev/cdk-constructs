@@ -1,7 +1,8 @@
 package dev.stratospheric.cdk;
 
-import software.amazon.awscdk.core.Stack;
-import software.amazon.awscdk.core.*;
+import software.amazon.awscdk.core.Construct;
+import software.amazon.awscdk.core.Environment;
+import software.amazon.awscdk.core.RemovalPolicy;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroup;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroupIngress;
 import software.amazon.awscdk.services.ecr.IRepository;
@@ -23,7 +24,7 @@ import static java.util.Collections.singletonList;
  * and places them into ECS task. Creates a log group for each ECS task. Creates a target group for the ECS tasks
  * that is attached to the load balancer from the {@link Network}.
  */
-public class Service extends Stack {
+public class Service extends Construct {
 
     public static class DockerImageSource {
         private final String dockerRepositoryName;
@@ -68,7 +69,7 @@ public class Service extends Stack {
         }
     }
 
-    public static class ServiceProperties {
+    public static class ServiceInputParameters {
         private final DockerImageSource dockerImageSource;
         private final Map<String, String> environmentVariables;
         private final List<String> securityGroupIdsToGrantIngressFromEcs;
@@ -94,7 +95,7 @@ public class Service extends Stack {
          * @param securityGroupIdsToGrantIngressFromEcs Ids of the security groups that the ECS containers should be granted access to.
          * @param environmentVariables                  the environment variables provided to the Java runtime within the Docker containers.
          */
-        public ServiceProperties(
+        public ServiceInputParameters(
                 DockerImageSource dockerImageSource,
                 List<String> securityGroupIdsToGrantIngressFromEcs,
                 Map<String, String> environmentVariables) {
@@ -108,7 +109,7 @@ public class Service extends Stack {
          * <p>
          * Default: 15.
          */
-        public ServiceProperties withHealthCheckIntervalSeconds(int healthCheckIntervalSeconds) {
+        public ServiceInputParameters withHealthCheckIntervalSeconds(int healthCheckIntervalSeconds) {
             this.healthCheckIntervalSeconds = healthCheckIntervalSeconds;
             return this;
         }
@@ -118,7 +119,7 @@ public class Service extends Stack {
          * <p>
          * Default: "/actuator/health".
          */
-        public ServiceProperties withHealthCheckPath(String healthCheckPath) {
+        public ServiceInputParameters withHealthCheckPath(String healthCheckPath) {
             Objects.requireNonNull(healthCheckPath);
             this.healthCheckPath = healthCheckPath;
             return this;
@@ -129,7 +130,7 @@ public class Service extends Stack {
          * <p>
          * Default: 8080.
          */
-        public ServiceProperties withContainerPort(int containerPort) {
+        public ServiceInputParameters withContainerPort(int containerPort) {
             Objects.requireNonNull(containerPort);
             this.containerPort = containerPort;
             return this;
@@ -138,7 +139,7 @@ public class Service extends Stack {
         /**
          * The protocol to access the application within the container. Default: "HTTP".
          */
-        public ServiceProperties withContainerProtocol(String containerProtocol) {
+        public ServiceInputParameters withContainerProtocol(String containerProtocol) {
             Objects.requireNonNull(containerProtocol);
             this.containerProtocol = containerProtocol;
             return this;
@@ -149,7 +150,7 @@ public class Service extends Stack {
          * <p>
          * Default: 5.
          */
-        public ServiceProperties withHealthCheckTimeoutSeconds(int healthCheckTimeoutSeconds) {
+        public ServiceInputParameters withHealthCheckTimeoutSeconds(int healthCheckTimeoutSeconds) {
             this.healthCheckTimeoutSeconds = healthCheckTimeoutSeconds;
             return this;
         }
@@ -159,7 +160,7 @@ public class Service extends Stack {
          * <p>
          * Default: 2.
          */
-        public ServiceProperties withHealthyThresholdCount(int healthyThresholdCount) {
+        public ServiceInputParameters withHealthyThresholdCount(int healthyThresholdCount) {
             this.healthyThresholdCount = healthyThresholdCount;
             return this;
         }
@@ -169,7 +170,7 @@ public class Service extends Stack {
          * <p>
          * Default: 8.
          */
-        public ServiceProperties withUnhealthyThresholdCount(int unhealthyThresholdCount) {
+        public ServiceInputParameters withUnhealthyThresholdCount(int unhealthyThresholdCount) {
             this.unhealthyThresholdCount = unhealthyThresholdCount;
             return this;
         }
@@ -181,7 +182,7 @@ public class Service extends Stack {
          * <p>
          * Default: 256 (0.25 CPUs).
          */
-        public ServiceProperties withCpu(int cpu) {
+        public ServiceInputParameters withCpu(int cpu) {
             this.cpu = cpu;
             return this;
         }
@@ -193,7 +194,7 @@ public class Service extends Stack {
          * <p>
          * Default: 512.
          */
-        public ServiceProperties withMemory(int memory) {
+        public ServiceInputParameters withMemory(int memory) {
             this.memory = memory;
             return this;
         }
@@ -203,7 +204,7 @@ public class Service extends Stack {
          * <p>
          * Default: 1 week.
          */
-        public ServiceProperties withLogRetention(RetentionDays logRetention) {
+        public ServiceInputParameters withLogRetention(RetentionDays logRetention) {
             Objects.requireNonNull(logRetention);
             this.logRetention = logRetention;
             return this;
@@ -214,7 +215,7 @@ public class Service extends Stack {
          * <p>
          * Default: 2.
          */
-        public ServiceProperties withDesiredInstances(int desiredInstances) {
+        public ServiceInputParameters withDesiredInstances(int desiredInstances) {
             this.desiredInstancesCount = desiredInstances;
             return this;
         }
@@ -225,7 +226,7 @@ public class Service extends Stack {
          * <p>
          * Default: 200.
          */
-        public ServiceProperties withMaximumInstancesPercent(int maximumInstancesPercent) {
+        public ServiceInputParameters withMaximumInstancesPercent(int maximumInstancesPercent) {
             this.maximumInstancesPercent = maximumInstancesPercent;
             return this;
         }
@@ -236,7 +237,7 @@ public class Service extends Stack {
          * <p>
          * Default: 50.
          */
-        public ServiceProperties withMinimumHealthyInstancesPercent(int minimumHealthyInstancesPercent) {
+        public ServiceInputParameters withMinimumHealthyInstancesPercent(int minimumHealthyInstancesPercent) {
             this.minimumHealthyInstancesPercent = minimumHealthyInstancesPercent;
             return this;
         }
@@ -249,26 +250,22 @@ public class Service extends Stack {
             final String id,
             final Environment awsEnvironment,
             final ApplicationEnvironment applicationEnvironment,
-            ServiceProperties serviceProperties) {
-        super(scope, id, StackProps.builder()
-                .stackName(applicationEnvironment.prefix("Service"))
-                .env(awsEnvironment).build());
-
-        String vpcId = Network.getVpcId(this, applicationEnvironment.getEnvironmentName());
+            final ServiceInputParameters serviceInputParameters,
+            final Network.NetworkOutputParameters networkOutputParameters) {
+        super(scope, id);
 
         CfnTargetGroup targetGroup = CfnTargetGroup.Builder.create(this, "targetGroup")
-                .healthCheckIntervalSeconds(serviceProperties.healthCheckIntervalSeconds)
-                .healthCheckPath(serviceProperties.healthCheckPath)
-                .healthCheckPort(String.valueOf(serviceProperties.containerPort))
-                .healthCheckProtocol(serviceProperties.containerProtocol)
-                .healthCheckTimeoutSeconds(serviceProperties.healthCheckTimeoutSeconds)
-                .healthyThresholdCount(serviceProperties.healthyThresholdCount)
-                .unhealthyThresholdCount(serviceProperties.unhealthyThresholdCount)
+                .healthCheckIntervalSeconds(serviceInputParameters.healthCheckIntervalSeconds)
+                .healthCheckPath(serviceInputParameters.healthCheckPath)
+                .healthCheckPort(String.valueOf(serviceInputParameters.containerPort))
+                .healthCheckProtocol(serviceInputParameters.containerProtocol)
+                .healthCheckTimeoutSeconds(serviceInputParameters.healthCheckTimeoutSeconds)
+                .healthyThresholdCount(serviceInputParameters.healthyThresholdCount)
+                .unhealthyThresholdCount(serviceInputParameters.unhealthyThresholdCount)
                 .targetType("ip")
-                .name(applicationEnvironment.prefix("targetGroup"))
-                .port(serviceProperties.containerPort)
-                .protocol(serviceProperties.containerProtocol)
-                .vpcId(vpcId)
+                .port(serviceInputParameters.containerPort)
+                .protocol(serviceInputParameters.containerProtocol)
+                .vpcId(networkOutputParameters.getVpcId())
                 .build();
 
         CfnListenerRule.ActionProperty actionProperty = CfnListenerRule.ActionProperty.builder()
@@ -281,25 +278,27 @@ public class Service extends Stack {
                 .values(singletonList("*"))
                 .build();
 
-        String httpsListenerArn = Network.getHttpsListenerArn(this, applicationEnvironment.getEnvironmentName());
-        CfnListenerRule httpsListenerRule = CfnListenerRule.Builder.create(this, "httpsListenerRule")
-                .actions(singletonList(actionProperty))
-                .conditions(singletonList(condition))
-                .listenerArn(httpsListenerArn)
-                .priority(1)
-                .build();
+        Optional<String> httpsListenerArn = networkOutputParameters.getHttpsListenerArn();
+        CfnListenerRule httpsListenerRule = null;
+        if (httpsListenerArn.isPresent()) {
+            httpsListenerRule = CfnListenerRule.Builder.create(this, "httpsListenerRule")
+                    .actions(singletonList(actionProperty))
+                    .conditions(singletonList(condition))
+                    .listenerArn(httpsListenerArn.get())
+                    .priority(1)
+                    .build();
+        }
 
-        String httpListenerArn = Network.getHttpListenerArn(this, applicationEnvironment.getEnvironmentName());
         CfnListenerRule httpListenerRule = CfnListenerRule.Builder.create(this, "httpListenerRule")
                 .actions(singletonList(actionProperty))
                 .conditions(singletonList(condition))
-                .listenerArn(httpListenerArn)
+                .listenerArn(networkOutputParameters.getHttpListenerArn())
                 .priority(2)
                 .build();
 
         LogGroup logGroup = LogGroup.Builder.create(this, "ecsLogGroup")
                 .logGroupName(applicationEnvironment.prefix("logs"))
-                .retention(serviceProperties.logRetention)
+                .retention(serviceInputParameters.logRetention)
                 .removalPolicy(RemovalPolicy.DESTROY)
                 .build();
 
@@ -347,37 +346,37 @@ public class Service extends Stack {
                 .build();
 
         String dockerRepositoryUrl = null;
-        if (serviceProperties.dockerImageSource.isEcrSource()) {
-            IRepository dockerRepository = Repository.fromRepositoryName(this, "ecrRepository", serviceProperties.dockerImageSource.getDockerRepositoryName());
+        if (serviceInputParameters.dockerImageSource.isEcrSource()) {
+            IRepository dockerRepository = Repository.fromRepositoryName(this, "ecrRepository", serviceInputParameters.dockerImageSource.getDockerRepositoryName());
             dockerRepository.grantPull(ecsTaskExecutionRole);
-            dockerRepositoryUrl = dockerRepository.repositoryUriForTag(serviceProperties.dockerImageSource.getDockerImageTag());
+            dockerRepositoryUrl = dockerRepository.repositoryUriForTag(serviceInputParameters.dockerImageSource.getDockerImageTag());
         } else {
-            dockerRepositoryUrl = serviceProperties.dockerImageSource.dockerImageUrl;
+            dockerRepositoryUrl = serviceInputParameters.dockerImageSource.dockerImageUrl;
         }
 
         CfnTaskDefinition.ContainerDefinitionProperty container = CfnTaskDefinition.ContainerDefinitionProperty.builder()
                 .name(containerName(applicationEnvironment))
-                .cpu(serviceProperties.cpu)
-                .memory(serviceProperties.memory)
+                .cpu(serviceInputParameters.cpu)
+                .memory(serviceInputParameters.memory)
                 .image(dockerRepositoryUrl)
                 .logConfiguration(CfnTaskDefinition.LogConfigurationProperty.builder()
                         .logDriver("awslogs")
                         .options(Map.of(
                                 "awslogs-group", logGroup.getLogGroupName(),
-                                "awslogs-region", getRegion(),
+                                "awslogs-region", awsEnvironment.getRegion(),
                                 "awslogs-stream-prefix", applicationEnvironment.prefix("stream"),
                                 "awslogs-multiline-pattern", "^[0-9]{4}-[0-9]{2}-[0-9]{2}"))
                         .build())
                 .portMappings(singletonList(CfnTaskDefinition.PortMappingProperty.builder()
-                        .containerPort(serviceProperties.containerPort)
+                        .containerPort(serviceInputParameters.containerPort)
                         .build()))
-                .environment(toKeyValuePairs(serviceProperties.environmentVariables))
+                .environment(toKeyValuePairs(serviceInputParameters.environmentVariables))
                 .build();
 
         CfnTaskDefinition taskDefinition = CfnTaskDefinition.Builder.create(this, "taskDefinition")
                 // skipped family
-                .cpu(String.valueOf(serviceProperties.cpu))
-                .memory(String.valueOf(serviceProperties.memory))
+                .cpu(String.valueOf(serviceInputParameters.cpu))
+                .memory(String.valueOf(serviceInputParameters.memory))
                 .networkMode("awsvpc")
                 .requiresCompatibilities(singletonList("FARGATE"))
                 .executionRoleArn(ecsTaskExecutionRole.getRoleArn())
@@ -386,7 +385,7 @@ public class Service extends Stack {
                 .build();
 
         CfnSecurityGroup ecsSecurityGroup = CfnSecurityGroup.Builder.create(this, "ecsSecurityGroup")
-                .vpcId(vpcId)
+                .vpcId(networkOutputParameters.getVpcId())
                 .groupDescription("SecurityGroup for the ECS containers")
                 .groupName(applicationEnvironment.prefix("ecsSecurityGroup"))
                 .build();
@@ -399,39 +398,44 @@ public class Service extends Stack {
                 .build();
 
         // allow the load balancer to access the containers
-        String loadbalancerSecurityGroupId = Network.getLoadbalancerSecurityGroupId(this, applicationEnvironment.getEnvironmentName());
         CfnSecurityGroupIngress ecsIngressFromLoadbalancer = CfnSecurityGroupIngress.Builder.create(this, "ecsIngressFromLoadbalancer")
                 .ipProtocol("-1")
-                .sourceSecurityGroupId(loadbalancerSecurityGroupId)
+                .sourceSecurityGroupId(networkOutputParameters.getLoadbalancerSecurityGroupId())
                 .groupId(ecsSecurityGroup.getAttrGroupId())
                 .build();
 
-        allowIngressFromEcs(serviceProperties.securityGroupIdsToGrantIngressFromEcs, ecsSecurityGroup);
+        allowIngressFromEcs(serviceInputParameters.securityGroupIdsToGrantIngressFromEcs, ecsSecurityGroup);
 
-        String ecsClusterName = Network.getEcsClusterName(this, applicationEnvironment.getEnvironmentName());
-        List<String> publicSubnetIds = Network.getPublicSubnets(this, applicationEnvironment.getEnvironmentName());
         CfnService service = CfnService.Builder.create(this, "ecsService")
-                .cluster(ecsClusterName)
+                .cluster(networkOutputParameters.getEcsClusterName())
                 .launchType("FARGATE")
                 .deploymentConfiguration(CfnService.DeploymentConfigurationProperty.builder()
-                        .maximumPercent(serviceProperties.maximumInstancesPercent)
-                        .minimumHealthyPercent(serviceProperties.minimumHealthyInstancesPercent)
+                        .maximumPercent(serviceInputParameters.maximumInstancesPercent)
+                        .minimumHealthyPercent(serviceInputParameters.minimumHealthyInstancesPercent)
                         .build())
-                .desiredCount(serviceProperties.desiredInstancesCount)
+                .desiredCount(serviceInputParameters.desiredInstancesCount)
                 .taskDefinition(taskDefinition.getRef())
                 .loadBalancers(singletonList(CfnService.LoadBalancerProperty.builder()
                         .containerName(containerName(applicationEnvironment))
-                        .containerPort(serviceProperties.containerPort)
+                        .containerPort(serviceInputParameters.containerPort)
                         .targetGroupArn(targetGroup.getRef())
                         .build()))
                 .networkConfiguration(CfnService.NetworkConfigurationProperty.builder()
                         .awsvpcConfiguration(CfnService.AwsVpcConfigurationProperty.builder()
                                 .assignPublicIp("ENABLED")
                                 .securityGroups(singletonList(ecsSecurityGroup.getAttrGroupId()))
-                                .subnets(publicSubnetIds)
+                                .subnets(networkOutputParameters.getPublicSubnets())
                                 .build())
                         .build())
                 .build();
+
+        // Adding an explicit dependency from the service to the listeners to avoid "has no load balancer associated" error
+        // (see https://stackoverflow.com/questions/61250772/how-can-i-create-a-dependson-relation-between-ec2-and-rds-using-aws-cdk).
+        if(httpsListenerArn.isPresent()){
+            service.addDependsOn(httpsListenerRule);
+        }
+        service.addDependsOn(httpListenerRule);
+
 
         applicationEnvironment.tag(this);
 
