@@ -13,9 +13,9 @@ import java.util.Collections;
  *
  * This construct is for demonstration purposes since it's not configurable and thus of little practical use.
  */
-public class SpringBootApplication extends Stack {
+public class SpringBootApplicationStack extends Stack {
 
-    public SpringBootApplication(
+    public SpringBootApplicationStack(
             final Construct scope,
             final String id,
             final Environment environment,

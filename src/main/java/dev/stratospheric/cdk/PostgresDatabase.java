@@ -4,8 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import software.amazon.awscdk.core.Construct;
 import software.amazon.awscdk.core.Environment;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroup;
-import software.amazon.awscdk.services.ec2.ISecurityGroup;
-import software.amazon.awscdk.services.ec2.SecurityGroup;
 import software.amazon.awscdk.services.rds.CfnDBInstance;
 import software.amazon.awscdk.services.rds.CfnDBSubnetGroup;
 import software.amazon.awscdk.services.secretsmanager.CfnSecretTargetAttachment;
@@ -166,7 +164,10 @@ public class PostgresDatabase extends Construct {
         return applicationEnvironment.getEnvironmentName() + "-" + applicationEnvironment.getApplicationName() + "-Database-" + parameterName;
     }
 
-    public DatabaseOutputParameters getOutputParameters(){
+    /**
+     * Collects the output parameters that other constructs might be interested in.
+     */
+    public DatabaseOutputParameters getOutputParameters() {
         return new DatabaseOutputParameters(
                 this.dbInstance.getAttrEndpointAddress(),
                 this.dbInstance.getAttrEndpointPort(),
@@ -176,7 +177,16 @@ public class PostgresDatabase extends Construct {
         );
     }
 
-    public DatabaseOutputParameters getOutputParametersFromParameterStore(Construct scope, ApplicationEnvironment environment){
+    /**
+     * Collects the output parameters of an already deployed {@link PostgresDatabase} construct from the parameter store. This requires
+     * that a {@link PostgresDatabase} construct has been deployed previously. If you want to access the parameters from the same
+     * stack that the {@link PostgresDatabase} construct is in, use the plain {@link #getOutputParameters()} method.
+     *
+     * @param scope       the construct in which we need the output parameters
+     * @param environment the environment for which to load the output parameters. The deployed {@link PostgresDatabase}
+     *                    construct must have been deployed into this environment.
+     */
+    public DatabaseOutputParameters getOutputParametersFromParameterStore(Construct scope, ApplicationEnvironment environment) {
         return new DatabaseOutputParameters(
                 getEndpointAddress(scope, environment),
                 getEndpointPort(scope, environment),

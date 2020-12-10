@@ -291,7 +291,9 @@ public class Network extends Construct {
     }
 
     /**
-     * Collects the output parameters of an already deployed {@link Network} construct from the parameter store.
+     * Collects the output parameters of an already deployed {@link Network} construct from the parameter store. This requires
+     * that a {@link Network} construct has been deployed previously. If you want to access the parameters from the same
+     * stack that the {@link Network} construct is in, use the plain {@link #getOutputParameters()} method.
      *
      * @param scope           the construct in which we need the output parameters
      * @param environmentName the name of the environment for which to load the output parameters. The deployed {@link Network}
