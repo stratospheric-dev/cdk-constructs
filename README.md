@@ -17,6 +17,7 @@ A short description of the constructs in this project. For a more details descri
 * **[PostgresDatabase](src/main/java/dev/stratospheric/cdk/PostgresDatabase.java)**: creates a PostgreSQL database in the isolated subnets of a given network. Requires a running `Network` stack (or at least the parameters it would expose in the SSM parameter store). Exposes the database connection parameters in the parameter store.
 * **[JumpHost](src/main/java/dev/stratospheric/cdk/JumpHost.java)**: creates an EC2 instance in a `Network`'s public subnet that has access to the PostgreSQL instance in a `PostgreSQLDatabase` stack. This EC2 instance can act as a jump host (aka bastion host) to connect to the database from your local machine.
 * **[Service](src/main/java/dev/stratospheric/cdk/Service.java)**: creates an ECS service that deploys a given Docker image into the public subnets of a given `Network`. Allows configuration of things like health check and environment variables.
+* **[SpringBootApplicationStack](src/main/java/dev/stratospheric/cdk/Service.java)**: a stack that combines the [Network](src/main/java/dev/stratospheric/cdk/Network.java) and [Service](src/main/java/dev/stratospheric/cdk/Service.java) constructs, configured for easy deployment of a Spring Boot Docker image.
 
 ## Installation
 
