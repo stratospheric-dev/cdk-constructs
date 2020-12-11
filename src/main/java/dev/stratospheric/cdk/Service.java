@@ -74,7 +74,7 @@ public class Service extends Construct {
         private final Map<String, String> environmentVariables;
         private final List<String> securityGroupIdsToGrantIngressFromEcs;
         private int healthCheckIntervalSeconds = 15;
-        private String healthCheckPath = "/actuator/health";
+        private String healthCheckPath = "/";
         private int containerPort = 8080;
         private String containerProtocol = "HTTP";
         private int healthCheckTimeoutSeconds = 5;
