@@ -186,7 +186,7 @@ public class PostgresDatabase extends Construct {
      * @param environment the environment for which to load the output parameters. The deployed {@link PostgresDatabase}
      *                    construct must have been deployed into this environment.
      */
-    public DatabaseOutputParameters getOutputParametersFromParameterStore(Construct scope, ApplicationEnvironment environment) {
+    public static DatabaseOutputParameters getOutputParametersFromParameterStore(Construct scope, ApplicationEnvironment environment) {
         return new DatabaseOutputParameters(
                 getEndpointAddress(scope, environment),
                 getEndpointPort(scope, environment),
