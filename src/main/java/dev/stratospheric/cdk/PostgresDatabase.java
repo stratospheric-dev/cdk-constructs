@@ -71,7 +71,7 @@ public class PostgresDatabase extends Construct {
 
         // This will generate a JSON object with the keys "username" and "password".
         databaseSecret = Secret.Builder.create(this, "databaseSecret")
-                .secretName("DatabaseSecret")
+                .secretName(applicationEnvironment.prefix("DatabaseSecret"))
                 .description("Credentials to the RDS instance")
                 .generateSecretString(SecretStringGenerator.builder()
                         .secretStringTemplate(String.format("{\"username\": \"%s\"}", username))
@@ -191,9 +191,8 @@ public class PostgresDatabase extends Construct {
                 getEndpointAddress(scope, environment),
                 getEndpointPort(scope, environment),
                 getDbName(scope, environment),
-                getDatabaseSecurityGroupId(scope, environment),
-                getDatabaseSecretArn(scope, environment)
-        );
+                getDatabaseSecretArn(scope, environment),
+                getDatabaseSecurityGroupId(scope, environment));
     }
 
 
