@@ -387,7 +387,6 @@ public class Service extends Construct {
         CfnSecurityGroup ecsSecurityGroup = CfnSecurityGroup.Builder.create(this, "ecsSecurityGroup")
                 .vpcId(networkOutputParameters.getVpcId())
                 .groupDescription("SecurityGroup for the ECS containers")
-                .groupName(applicationEnvironment.prefix("ecsSecurityGroup"))
                 .build();
 
         // allow ECS containers to access each other
