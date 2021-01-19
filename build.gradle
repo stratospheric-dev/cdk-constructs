@@ -16,7 +16,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 group = 'dev.stratospheric'
-version = '0.0.10'
+version = '0.0.11'
 sourceCompatibility = '11'
 
 repositories {
@@ -71,6 +71,11 @@ def pomConfig = {
             id "thombergs"
             name "Tom Hombergs"
             email "tom.hombergs@gmail.com"
+        }
+        developer {
+            id "rieckpil"
+            name "Philip Riecks"
+            email "mail@philipriecks.de"
         }
     }
 

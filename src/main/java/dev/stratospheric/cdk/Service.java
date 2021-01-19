@@ -73,6 +73,7 @@ public class Service extends Construct {
         private final DockerImageSource dockerImageSource;
         private final Map<String, String> environmentVariables;
         private final List<String> securityGroupIdsToGrantIngressFromEcs;
+        private List<PolicyStatement> taskRolePolicyStatements = new ArrayList<>();
         private int healthCheckIntervalSeconds = 15;
         private String healthCheckPath = "/";
         private int containerPort = 8080;
@@ -242,6 +243,16 @@ public class Service extends Construct {
             return this;
         }
 
+        /**
+         * The list of PolicyStatement objects that define which operations this service can perform on other
+         * AWS resources (for example ALLOW sqs:GetQueueUrl for all SQS queues).
+         *
+         * Default: none (empty list).
+         */
+        public ServiceInputParameters withTaskRolePolicyStatements(List<PolicyStatement> taskRolePolicyStatements) {
+            this.taskRolePolicyStatements = taskRolePolicyStatements;
+            return this;
+        }
 
     }
 
@@ -328,20 +339,7 @@ public class Service extends Construct {
                 .inlinePolicies(Map.of(
                         applicationEnvironment.prefix("ecsTaskRolePolicy"),
                         PolicyDocument.Builder.create()
-                                .statements(singletonList(PolicyStatement.Builder.create()
-                                        .effect(Effect.ALLOW)
-                                        .resources(singletonList("*"))
-                                        .actions(Arrays.asList(
-                                                "sqs:DeleteMessage",
-                                                "sqs:GetQueueUrl",
-                                                "sqs:ListDeadLetterSourceQueues",
-                                                "sqs:ListQueues",
-                                                "sqs:ListQueueTags",
-                                                "sqs:ReceiveMessage",
-                                                "sqs:SendMessage",
-                                                "sqs:ChangeMessageVisibility",
-                                                "sqs:GetQueueAttributes"))
-                                        .build()))
+                                .statements(serviceInputParameters.taskRolePolicyStatements)
                                 .build()))
                 .build();
 
