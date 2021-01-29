@@ -20,3 +20,4 @@ build/
 !**/src/main/**
 !**/src/test/**
 /gradle/
+**/cdk.out/

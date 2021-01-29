@@ -73,6 +73,7 @@ public class Service extends Construct {
         private final DockerImageSource dockerImageSource;
         private final Map<String, String> environmentVariables;
         private final List<String> securityGroupIdsToGrantIngressFromEcs;
+        private List<PolicyStatement> taskRolePolicyStatements = new ArrayList<>();
         private int healthCheckIntervalSeconds = 15;
         private String healthCheckPath = "/";
         private int containerPort = 8080;
@@ -86,6 +87,7 @@ public class Service extends Construct {
         private int desiredInstancesCount = 2;
         private int maximumInstancesPercent = 200;
         private int minimumHealthyInstancesPercent = 50;
+        private boolean stickySessionsEnabled = false;
 
         /**
          * Knobs and dials you can configure to run a Docker image in an ECS service. The default values are set in a way
@@ -257,6 +259,26 @@ public class Service extends Construct {
             return this;
         }
 
+        /**
+         * The list of PolicyStatement objects that define which operations this service can perform on other
+         * AWS resources (for example ALLOW sqs:GetQueueUrl for all SQS queues).
+         * <p>
+         * Default: none (empty list).
+         */
+        public ServiceInputParameters withTaskRolePolicyStatements(List<PolicyStatement> taskRolePolicyStatements) {
+            this.taskRolePolicyStatements = taskRolePolicyStatements;
+            return this;
+        }
+
+        /**
+         * Disable or enable sticky sessions for the the load balancer.
+         * <p>
+         * Default: false.
+         */
+        public ServiceInputParameters withStickySessionsEnabled(boolean stickySessionsEnabled) {
+            this.stickySessionsEnabled = stickySessionsEnabled;
+            return this;
+        }
 
     }
 
@@ -269,6 +291,12 @@ public class Service extends Construct {
             final Network.NetworkOutputParameters networkOutputParameters) {
         super(scope, id);
 
+        List<CfnTargetGroup.TargetGroupAttributeProperty> stickySessionConfiguration = Arrays.asList(
+                CfnTargetGroup.TargetGroupAttributeProperty.builder().key("stickiness.enabled").value("true").build(),
+                CfnTargetGroup.TargetGroupAttributeProperty.builder().key("stickiness.type").value("lb_cookie").build(),
+                CfnTargetGroup.TargetGroupAttributeProperty.builder().key("stickiness.lb_cookie.duration_seconds").value("3600").build()
+        );
+
         CfnTargetGroup targetGroup = CfnTargetGroup.Builder.create(this, "targetGroup")
                 .healthCheckIntervalSeconds(serviceInputParameters.healthCheckIntervalSeconds)
                 .healthCheckPath(serviceInputParameters.healthCheckPath)
@@ -277,6 +305,7 @@ public class Service extends Construct {
                 .healthCheckTimeoutSeconds(serviceInputParameters.healthCheckTimeoutSeconds)
                 .healthyThresholdCount(serviceInputParameters.healthyThresholdCount)
                 .unhealthyThresholdCount(serviceInputParameters.unhealthyThresholdCount)
+                .targetGroupAttributes(serviceInputParameters.stickySessionsEnabled ? stickySessionConfiguration : Arrays.asList())
                 .targetType("ip")
                 .port(serviceInputParameters.containerPort)
                 .protocol(serviceInputParameters.containerProtocol)
@@ -343,20 +372,7 @@ public class Service extends Construct {
                 .inlinePolicies(Map.of(
                         applicationEnvironment.prefix("ecsTaskRolePolicy"),
                         PolicyDocument.Builder.create()
-                                .statements(singletonList(PolicyStatement.Builder.create()
-                                        .effect(Effect.ALLOW)
-                                        .resources(singletonList("*"))
-                                        .actions(Arrays.asList(
-                                                "sqs:DeleteMessage",
-                                                "sqs:GetQueueUrl",
-                                                "sqs:ListDeadLetterSourceQueues",
-                                                "sqs:ListQueues",
-                                                "sqs:ListQueueTags",
-                                                "sqs:ReceiveMessage",
-                                                "sqs:SendMessage",
-                                                "sqs:ChangeMessageVisibility",
-                                                "sqs:GetQueueAttributes"))
-                                        .build()))
+                                .statements(serviceInputParameters.taskRolePolicyStatements)
                                 .build()))
                 .build();
 
@@ -445,7 +461,7 @@ public class Service extends Construct {
 
         // Adding an explicit dependency from the service to the listeners to avoid "has no load balancer associated" error
         // (see https://stackoverflow.com/questions/61250772/how-can-i-create-a-dependson-relation-between-ec2-and-rds-using-aws-cdk).
-        if(httpsListenerArn.isPresent()){
+        if (httpsListenerArn.isPresent()) {
             service.addDependsOn(httpsListenerRule);
         }
         service.addDependsOn(httpListenerRule);
