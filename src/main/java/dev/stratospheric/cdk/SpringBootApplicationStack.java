@@ -1,9 +1,6 @@
 package dev.stratospheric.cdk;
 
-import software.amazon.awscdk.core.Construct;
-import software.amazon.awscdk.core.Environment;
-import software.amazon.awscdk.core.Stack;
-import software.amazon.awscdk.core.StackProps;
+import software.amazon.awscdk.core.*;
 
 import java.util.Collections;
 
@@ -34,6 +31,10 @@ public class SpringBootApplicationStack extends Stack {
                         Collections.emptyMap()),
                 network.getOutputParameters());
 
+        CfnOutput httpsListenerOutput = new CfnOutput(this, "loadbalancerDnsName", CfnOutputProps.builder()
+                .exportName("loadbalancerDnsName")
+                .value(network.getLoadBalancer().getLoadBalancerDnsName())
+                .build());
     }
 
 }

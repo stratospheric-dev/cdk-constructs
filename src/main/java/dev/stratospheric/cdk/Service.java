@@ -20,7 +20,7 @@ import java.util.*;
 import static java.util.Collections.singletonList;
 
 /**
- * Creates an ECS service on top of a {@link Network}. Loads Docker images from a {@link DockerRepository}
+ * Creates an ECS service on top of a {@link Network}. Loads Docker images from a {@link DockerImageSource}
  * and places them into ECS task. Creates a log group for each ECS task. Creates a target group for the ECS tasks
  * that is attached to the load balancer from the {@link Network}.
  */
@@ -387,7 +387,6 @@ public class Service extends Construct {
         CfnSecurityGroup ecsSecurityGroup = CfnSecurityGroup.Builder.create(this, "ecsSecurityGroup")
                 .vpcId(networkOutputParameters.getVpcId())
                 .groupDescription("SecurityGroup for the ECS containers")
-                .groupName(applicationEnvironment.prefix("ecsSecurityGroup"))
                 .build();
 
         // allow ECS containers to access each other
