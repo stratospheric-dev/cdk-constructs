@@ -105,6 +105,21 @@ public class Service extends Construct {
         }
 
         /**
+         * Knobs and dials you can configure to run a Docker image in an ECS service. The default values are set in a way
+         * to work out of the box with a Spring Boot application.
+         *
+         * @param dockerImageSource                     the source from where to load the Docker image that we want to deploy.
+         * @param environmentVariables                  the environment variables provided to the Java runtime within the Docker containers.
+         */
+        public ServiceInputParameters(
+                DockerImageSource dockerImageSource,
+                Map<String, String> environmentVariables) {
+            this.dockerImageSource = dockerImageSource;
+            this.environmentVariables = environmentVariables;
+            this.securityGroupIdsToGrantIngressFromEcs = Collections.emptyList();
+        }
+
+        /**
          * The interval to wait between two health checks.
          * <p>
          * Default: 15.
