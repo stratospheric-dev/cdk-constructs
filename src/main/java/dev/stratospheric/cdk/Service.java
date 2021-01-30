@@ -366,15 +366,20 @@ public class Service extends Construct {
                                 .build()))
                 .build();
 
-        Role ecsTaskRole = Role.Builder.create(this, "ecsTaskRole")
+        Role.Builder roleBuilder = Role.Builder.create(this, "ecsTaskRole")
                 .assumedBy(ServicePrincipal.Builder.create("ecs-tasks.amazonaws.com").build())
-                .path("/")
-                .inlinePolicies(Map.of(
-                        applicationEnvironment.prefix("ecsTaskRolePolicy"),
-                        PolicyDocument.Builder.create()
-                                .statements(serviceInputParameters.taskRolePolicyStatements)
-                                .build()))
-                .build();
+                .path("/");
+
+        if(!serviceInputParameters.taskRolePolicyStatements.isEmpty()) {
+          roleBuilder.inlinePolicies(Map.of(
+            applicationEnvironment.prefix("ecsTaskRolePolicy"),
+            PolicyDocument.Builder.create()
+              .statements(serviceInputParameters.taskRolePolicyStatements)
+              .build()))
+            .build();
+        }
+
+        Role ecsTaskRole = roleBuilder.build();
 
         String dockerRepositoryUrl = null;
         if (serviceInputParameters.dockerImageSource.isEcrSource()) {
