@@ -18,8 +18,8 @@ jobs:
       with:
         java-version: 11
         server-id: ossrh
-          server-username: MAVEN_CENTRAL_USERNAME
-          server-password: MAVEN_CENTRAL_PASSWORD
+        server-username: MAVEN_CENTRAL_USERNAME
+        server-password: MAVEN_CENTRAL_PASSWORD
 
     - name: "Setup cache"
       uses: actions/cache@v1
