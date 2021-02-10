@@ -20,8 +20,8 @@ jobs:
         server-id: ossrh
         server-username: OSSRH_USERNAME
         server-password: OSSRH_PASSWORD
-        gpg-private-key: GPG_PRIVATE_KEY
         gpg-passphrase: GPG_PASSPHRASE
+        gpg-private-key: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
 
     - name: "Setup cache"
       uses: actions/cache@v1
@@ -41,5 +41,4 @@ jobs:
       env:
         OSSRH_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
         OSSRH_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-        GPG_PRIVATE_KEY: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
         GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
