@@ -31,10 +31,10 @@ jobs:
         restore-keys: ${{ runner.os }}-maven-
 
     - name: "Run Maven build"
-      run: ./mvnw package
+      run: ./mvnw -B package
 
     - name: "Publish to the Maven Central Repository"
-      # if: github.ref == 'refs/heads/release'
+      if: github.ref == 'refs/heads/release'
       run: |
         git config user.email "actions@github.com"
         git config user.name "GitHub Actions"
