@@ -11,7 +11,7 @@ jobs:
     steps:
 
     - name: "Checkout sources"
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
 
     - name: "Setup Java"
       uses: actions/setup-java@v1
@@ -24,12 +24,11 @@ jobs:
         gpg-private-key: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
 
     - name: "Setup cache"
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-            ${{ runner.os }}-maven-
+        restore-keys: ${{ runner.os }}-maven-
 
     - name: "Run Maven build"
       run: ./mvnw package
