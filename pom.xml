@@ -50,9 +50,7 @@
   </licenses>
 
   <scm>
-    <connection>scm:git:ssh://git@github.com/stratospheric-dev/cdk-constructs.git</connection>
-    <url>ssh://git@github.com/stratospheric-dev/cdk-constructs</url>
-    <developerConnection>scm:git:ssh://git@github.com/stratospheric-dev/cdk-constructs.git</developerConnection>
+    <developerConnection>scm:git:https://github.com/stratospheric-dev/cdk-constructs.git</developerConnection>
   </scm>
 
   <distributionManagement>
