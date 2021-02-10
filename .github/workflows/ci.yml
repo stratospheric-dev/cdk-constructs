@@ -39,9 +39,8 @@ jobs:
         git config user.email "actions@github.com"
         git config user.name "GitHub Actions"
 
-        ./mvnw -B release:prepare release:perform
+        ./mvnw -B release:prepare release:perform -Dusername=$GITHUB_ACTOR -Dpassword=$GITHUB_TOKEN
       env:
         OSSRH_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
         OSSRH_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
         GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
