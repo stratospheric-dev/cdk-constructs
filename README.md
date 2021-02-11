@@ -1,12 +1,32 @@
 # Stratospheric CDK Constructs
 
-[ ![Download](https://api.bintray.com/packages/stratospheric/maven-releases/cdk-constructs/images/download.svg) ](https://bintray.com/stratospheric/maven-releases/cdk-constructs/_latestVersion)
+[![CDK Constructs Maven Central](https://img.shields.io/maven-central/v/dev.stratospheric/cdk-constructs.svg?label=CDK%20Constrcuts%20Maven%20Central)](https://search.maven.org/search?q=g:%22dev.stratospheric%22%20AND%20a:%22cdk-constructs%22)
 
 A collection of Java CDK constructs that play well together to deploy an application and a database to Amazon ECS.
 
 The constructs have been built to deploy a real application into production and will be updated as this application evolves.
 
 These constructs are explained in further detail in [our book](https://stratospheric.dev).
+
+## Installation
+
+Load the dependency from Maven Central by adding this to your `pom.xml`:
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>dev.stratospheric</groupId>
+    <artifactId>cdk-constructs</artifactId>
+    <version>0.0.16</version>
+  </dependency>
+</dependencies>
+```
+
+... our your `build.gradle`:
+
+```groovy
+implementation('dev.stratospheric:cdk-constructs:0.0.16')
+```
 
 ## Construct Overview
 
@@ -19,34 +39,10 @@ A short description of the constructs in this project. For a more details descri
 * **[Service](src/main/java/dev/stratospheric/cdk/Service.java)**: creates an ECS service that deploys a given Docker image into the public subnets of a given `Network`. Allows configuration of things like health check and environment variables.
 * **[SpringBootApplicationStack](src/main/java/dev/stratospheric/cdk/Service.java)**: a stack that combines the [Network](src/main/java/dev/stratospheric/cdk/Network.java) and [Service](src/main/java/dev/stratospheric/cdk/Service.java) constructs, configured for easy deployment of a Spring Boot Docker image.
 
-## Installation
-
-Load the dependency from Bintray by adding this to your `pom.xml`:
-
-```xml
-<repositories>
-  <repository>
-    <snapshots>
-      <enabled>false</enabled>
-    </snapshots>
-    <id>central</id>
-    <name>bintray</name>
-    <url>https://jcenter.bintray.com</url>
-  </repository>
-</repositories>
-
-<dependencies>
-  <dependency>
-    <groupId>dev.stratospheric</groupId>
-    <artifactId>cdk-constructs</artifactId>
-    <version>0.0.1</version>
-  </dependency>
-</dependencies>
-```
 
 ## Usage
 
-An example usage of the database construct might look like this: 
+An example usage of the database construct might look like this:
 
 ```java
 public class DatabaseApp {
@@ -95,13 +91,13 @@ public class DatabaseApp {
 
 **An instance of `ApplicationEnvironment` specifies which environment the construct should be deployed into**. You can have multiple instances of each construct running, each with a different application (i.e. the name of the service you want to deploy) and a different environment (i.e. "test", "staging", "prod" or similar).
 
-**Most constructs take a properties object in the constructor**. Use these to configure the constructs. They have sensible defaults.  
+**Most constructs take a properties object in the constructor**. Use these to configure the constructs. They have sensible defaults.
 
 **Most constructs require certain parameters to be available in the SSM parameter store**. The `PostgresDatabase` construct, for example, needs the parameters exposed by the `Network` construct to be available in the SSM parameter store. Read the Javadocs to see which parameters are required. You can set those parameters manually, but it's easiest to have deployed a `Network` construct in the same environment beforehand.
 
-While it's totally possible to put all constructs into the same CDK app, **we recommend to put each construct into its own CDK app**. The reason for this is flexibility. You may want to deploy and destroy a jump host separately from the rest. Or you may want to move a database between two environments. In these cases, having everything in the same app makes you very inflexible. 
+While it's totally possible to put all constructs into the same CDK app, **we recommend to put each construct into its own CDK app**. The reason for this is flexibility. You may want to deploy and destroy a jump host separately from the rest. Or you may want to move a database between two environments. In these cases, having everything in the same app makes you very inflexible.
 
-Also, a monolithic CDK app would require you to pass the parameters for ALL constructs, even if you only want to deploy or destroy a single one. 
+Also, a monolithic CDK app would require you to pass the parameters for ALL constructs, even if you only want to deploy or destroy a single one.
 
 
 
