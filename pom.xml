@@ -3,7 +3,7 @@
 
   <groupId>dev.stratospheric</groupId>
   <artifactId>cdk-constructs</artifactId>
-  <version>0.0.15</version>
+  <version>0.0.16-SNAPSHOT</version>
   <description>A collection of CDK constructs to deploy an application on AWS.</description>
   <packaging>jar</packaging>
 
@@ -50,7 +50,7 @@
 
   <scm>
     <developerConnection>scm:git:https://github.com/stratospheric-dev/cdk-constructs.git</developerConnection>
-    <tag>cdk-constructs-0.0.15</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <distributionManagement>
