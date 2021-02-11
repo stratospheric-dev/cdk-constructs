@@ -4,8 +4,11 @@
   <groupId>dev.stratospheric</groupId>
   <artifactId>cdk-constructs</artifactId>
   <version>0.0.16-SNAPSHOT</version>
-  <description>A collection of CDK constructs to deploy an application on AWS.</description>
   <packaging>jar</packaging>
+
+  <name>CDK Constructs</name>
+  <description>A collection of CDK constructs to deploy an application on AWS.</description>
+  <url>https://github.com/stratospheric-dev/cdk-constructs</url>
 
   <properties>
     <maven.compiler.source>11</maven.compiler.source>
@@ -49,7 +52,9 @@
   </licenses>
 
   <scm>
+    <connection>scm:git:git://github.com/stratospheric-dev/cdk-constructs.git</connection>
     <developerConnection>scm:git:https://github.com/stratospheric-dev/cdk-constructs.git</developerConnection>
+    <url>https://github.com/stratospheric-dev/cdk-constructs</url>
     <tag>HEAD</tag>
   </scm>
 
