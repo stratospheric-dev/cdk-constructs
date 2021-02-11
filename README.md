@@ -1,6 +1,9 @@
 # Stratospheric CDK Constructs
 
-[![CDK Constructs Maven Central](https://img.shields.io/maven-central/v/dev.stratospheric/cdk-constructs.svg?label=CDK%20Constrcuts%20Maven%20Central)](https://search.maven.org/search?q=g:%22dev.stratospheric%22%20AND%20a:%22cdk-constructs%22)
+![Build & Release](https://github.com/stratospheric-dev/cdk-constructs/workflows/Build%20&%20Release/badge.svg?branch=release)
+![CodeQL](https://github.com/stratospheric-dev/cdk-constructs/workflows/CodeQL/badge.svg)
+
+[![CDK Constructs Maven Central](https://img.shields.io/maven-central/v/dev.stratospheric/cdk-constructs.svg?label=CDK%20Constructs%20Maven%20Central)](https://search.maven.org/search?q=g:%22dev.stratospheric%22%20AND%20a:%22cdk-constructs%22)
 
 A collection of Java CDK constructs that play well together to deploy an application and a database to Amazon ECS.
 
