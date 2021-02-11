@@ -48,7 +48,7 @@ jobs:
         # queries: ./path/to/local/query, your-org/your-repo/queries@main
 
     - run: |
-        chmod 755 gradlew && ./gradlew build
+        ./mvnw package
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
