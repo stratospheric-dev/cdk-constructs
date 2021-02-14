@@ -16,58 +16,58 @@ import java.util.Objects;
  */
 public class DockerRepository extends Construct {
 
-    private final IRepository ecrRepository;
+  private final IRepository ecrRepository;
 
-    public static class DockerRepositoryInputParameters {
-        private final String dockerRepositoryName;
-        private final String accountId;
-        private final int maxImageCount;
+  public DockerRepository(
+    final Construct scope,
+    final String id,
+    final Environment awsEnvironment,
+    final DockerRepositoryInputParameters dockerRepositoryInputParameters) {
+    super(scope, id);
 
-        /**
-         * @param dockerRepositoryName the name of the docker repository to create.
-         * @param accountId            ID of the AWS account which shall have permission to push and pull the Docker repository.
-         */
-        public DockerRepositoryInputParameters(String dockerRepositoryName, String accountId) {
-            this.dockerRepositoryName = dockerRepositoryName;
-            this.accountId = accountId;
-            this.maxImageCount = 10;
-        }
+    this.ecrRepository = Repository.Builder.create(this, "ecrRepository")
+      .repositoryName(dockerRepositoryInputParameters.dockerRepositoryName)
+      .lifecycleRules(Collections.singletonList(LifecycleRule.builder()
+        .rulePriority(1)
+        .description("limit to " + dockerRepositoryInputParameters.maxImageCount + " images")
+        .maxImageCount(dockerRepositoryInputParameters.maxImageCount)
+        .build()))
+      .build();
 
-        /**
-         * @param dockerRepositoryName the name of the docker repository to create.
-         * @param accountId            ID of the AWS account which shall have permission to push and pull the Docker repository.
-         * @param maxImageCount        the maximum number of images to be held in the repository before old images get deleted.
-         */
-        public DockerRepositoryInputParameters(String dockerRepositoryName, String accountId, int maxImageCount) {
-            Objects.requireNonNull(accountId, "accountId must not be null");
-            Objects.requireNonNull(dockerRepositoryName, "dockerRepositoryName must not be null");
-            this.accountId = accountId;
-            this.maxImageCount = maxImageCount;
-            this.dockerRepositoryName = dockerRepositoryName;
-        }
+    // grant pull and push to all users of the account
+    ecrRepository.grantPullPush(new AccountPrincipal(dockerRepositoryInputParameters.accountId));
+  }
+
+  public IRepository getEcrRepository() {
+    return ecrRepository;
+  }
+
+  public static class DockerRepositoryInputParameters {
+    private final String dockerRepositoryName;
+    private final String accountId;
+    private final int maxImageCount;
+
+    /**
+     * @param dockerRepositoryName the name of the docker repository to create.
+     * @param accountId            ID of the AWS account which shall have permission to push and pull the Docker repository.
+     */
+    public DockerRepositoryInputParameters(String dockerRepositoryName, String accountId) {
+      this.dockerRepositoryName = dockerRepositoryName;
+      this.accountId = accountId;
+      this.maxImageCount = 10;
     }
 
-    public DockerRepository(
-            final Construct scope,
-            final String id,
-            final Environment awsEnvironment,
-            final DockerRepositoryInputParameters dockerRepositoryInputParameters) {
-        super(scope, id);
-
-        this.ecrRepository = Repository.Builder.create(this, "ecrRepository")
-                .repositoryName(dockerRepositoryInputParameters.dockerRepositoryName)
-                .lifecycleRules(Collections.singletonList(LifecycleRule.builder()
-                        .rulePriority(1)
-                        .description("limit to " + dockerRepositoryInputParameters.maxImageCount + " images")
-                        .maxImageCount(dockerRepositoryInputParameters.maxImageCount)
-                        .build()))
-                .build();
-
-        // grant pull and push to all users of the account
-        ecrRepository.grantPullPush(new AccountPrincipal(dockerRepositoryInputParameters.accountId));
+    /**
+     * @param dockerRepositoryName the name of the docker repository to create.
+     * @param accountId            ID of the AWS account which shall have permission to push and pull the Docker repository.
+     * @param maxImageCount        the maximum number of images to be held in the repository before old images get deleted.
+     */
+    public DockerRepositoryInputParameters(String dockerRepositoryName, String accountId, int maxImageCount) {
+      Objects.requireNonNull(accountId, "accountId must not be null");
+      Objects.requireNonNull(dockerRepositoryName, "dockerRepositoryName must not be null");
+      this.accountId = accountId;
+      this.maxImageCount = maxImageCount;
+      this.dockerRepositoryName = dockerRepositoryName;
     }
-
-    public IRepository getEcrRepository() {
-        return ecrRepository;
-    }
+  }
 }
