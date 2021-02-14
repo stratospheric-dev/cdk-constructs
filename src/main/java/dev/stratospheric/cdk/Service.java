@@ -292,7 +292,7 @@ public class Service extends Construct {
    */
   private void createOutputParameters(String environmentName) {
 
-    StringParameter.Builder.create(this, "ecsSecurityGroupId")
+    StringParameter.Builder.create(this, PARAMETER_ECS_SECURITY_GROUP_ID)
       .parameterName(createParameterName(environmentName, PARAMETER_ECS_SECURITY_GROUP_ID))
       .stringValue(this.ecsSecurityGroup.getAttrGroupId())
       .build();
