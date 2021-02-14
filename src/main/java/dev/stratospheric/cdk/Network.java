@@ -483,7 +483,5 @@ public class Network extends Construct {
     public List<String> getAvailabilityZones() {
       return this.availabilityZones;
     }
-
-
   }
 }

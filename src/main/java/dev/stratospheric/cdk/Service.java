@@ -1,5 +1,6 @@
 package dev.stratospheric.cdk;
 
+import org.jetbrains.annotations.NotNull;
 import software.amazon.awscdk.core.Construct;
 import software.amazon.awscdk.core.Environment;
 import software.amazon.awscdk.core.RemovalPolicy;
@@ -14,6 +15,7 @@ import software.amazon.awscdk.services.elasticloadbalancingv2.CfnTargetGroup;
 import software.amazon.awscdk.services.iam.*;
 import software.amazon.awscdk.services.logs.LogGroup;
 import software.amazon.awscdk.services.logs.RetentionDays;
+import software.amazon.awscdk.services.ssm.StringParameter;
 
 import java.util.*;
 
@@ -26,13 +28,17 @@ import static java.util.Collections.singletonList;
  */
 public class Service extends Construct {
 
+  private static final String PARAMETER_ECS_SECURITY_GROUP_ID = "ecsSecurityGroupId";
+  private final CfnSecurityGroup ecsSecurityGroup;
+
   public Service(
     final Construct scope,
     final String id,
     final Environment awsEnvironment,
     final ApplicationEnvironment applicationEnvironment,
     final ServiceInputParameters serviceInputParameters,
-    final Network.NetworkOutputParameters networkOutputParameters) {
+    final Network.NetworkOutputParameters networkOutputParameters
+  ) {
     super(scope, id);
 
     List<CfnTargetGroup.TargetGroupAttributeProperty> stickySessionConfiguration = Arrays.asList(
@@ -164,7 +170,7 @@ public class Service extends Construct {
       .containerDefinitions(singletonList(container))
       .build();
 
-    CfnSecurityGroup ecsSecurityGroup = CfnSecurityGroup.Builder.create(this, "ecsSecurityGroup")
+    ecsSecurityGroup = CfnSecurityGroup.Builder.create(this, "ecsSecurityGroup")
       .vpcId(networkOutputParameters.getVpcId())
       .groupDescription("SecurityGroup for the ECS containers")
       .build();
@@ -215,9 +221,38 @@ public class Service extends Construct {
     }
     service.addDependsOn(httpListenerRule);
 
-
     applicationEnvironment.tag(this);
 
+    createOutputParameters(applicationEnvironment.getEnvironmentName());
+  }
+
+  @NotNull
+  private static String createParameterName(String environmentName, String parameterName) {
+    return environmentName + "-Service-" + parameterName;
+  }
+
+  private static String getEcsSecurityGroupIdFromParameterStore(Construct scope, String environmentName) {
+    return StringParameter.fromStringParameterName(scope, PARAMETER_ECS_SECURITY_GROUP_ID, createParameterName(environmentName, PARAMETER_ECS_SECURITY_GROUP_ID))
+      .getStringValue();
+  }
+
+  /**
+   * Collects the output parameters of an already deployed {@link Service} construct from the parameter store. This requires
+   * that a {@link Service} construct has been deployed previously. If you want to access the parameters from the same
+   * stack that the {@link Service} construct is in, use the plain {@link #getOutputParameters()} method.
+   *
+   * @param scope           the construct in which we need the output parameters
+   * @param environmentName the name of the environment for which to load the output parameters. The deployed {@link Network}
+   *                        construct must have been deployed into this environment.
+   */
+  public static Service.ServiceOutputParameters getOutputParametersFromParameterStore(Construct scope, String environmentName) {
+    return new Service.ServiceOutputParameters(
+      getEcsSecurityGroupIdFromParameterStore(scope, environmentName)
+    );
+  }
+
+  public CfnSecurityGroup getEcsSecurityGroup() {
+    return ecsSecurityGroup;
   }
 
   private void allowIngressFromEcs(List<String> securityGroupIds, CfnSecurityGroup ecsSecurityGroup) {
@@ -249,6 +284,27 @@ public class Service extends Construct {
       keyValuePairs.add(keyValuePair(entry.getKey(), entry.getValue()));
     }
     return keyValuePairs;
+  }
+
+  /**
+   * Stores output parameters of this stack in the parameter store so they can be retrieved by other stacks
+   * or constructs as necessary.
+   */
+  private void createOutputParameters(String environmentName) {
+
+    StringParameter.Builder.create(this, PARAMETER_ECS_SECURITY_GROUP_ID)
+      .parameterName(createParameterName(environmentName, PARAMETER_ECS_SECURITY_GROUP_ID))
+      .stringValue(this.ecsSecurityGroup.getAttrGroupId())
+      .build();
+  }
+
+  /**
+   * Collects the output parameters of this construct that might be of interest to other constructs.
+   */
+  public Service.ServiceOutputParameters getOutputParameters() {
+    return new Service.ServiceOutputParameters(
+      this.ecsSecurityGroup.getAttrGroupId()
+    );
   }
 
   public static class DockerImageSource {
@@ -507,4 +563,21 @@ public class Service extends Construct {
 
   }
 
+  public static class ServiceOutputParameters {
+
+    private final String ecsSecurityGroupId;
+
+    public ServiceOutputParameters(
+      String ecsSecurityGroupId
+    ) {
+      this.ecsSecurityGroupId = ecsSecurityGroupId;
+    }
+
+    /**
+     * The ID of the ECS security group.
+     */
+    public String getEcsSecurityGroupId() {
+      return this.ecsSecurityGroupId;
+    }
+  }
 }
