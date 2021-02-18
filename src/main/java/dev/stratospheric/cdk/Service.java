@@ -375,8 +375,7 @@ public class Service extends Construct {
             applicationEnvironment.prefix("ecsTaskRolePolicy"),
             PolicyDocument.Builder.create()
               .statements(serviceInputParameters.taskRolePolicyStatements)
-              .build()))
-            .build();
+              .build()));
         }
 
         Role ecsTaskRole = roleBuilder.build();
