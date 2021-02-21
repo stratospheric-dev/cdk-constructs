@@ -88,6 +88,7 @@ public class Service extends Construct {
         private int maximumInstancesPercent = 200;
         private int minimumHealthyInstancesPercent = 50;
         private boolean stickySessionsEnabled = false;
+        private String awslogsDateTimeFormat = "%Y-%m-%dT%H:%M:%S.%f%z";
 
         /**
          * Knobs and dials you can configure to run a Docker image in an ECS service. The default values are set in a way
@@ -280,6 +281,19 @@ public class Service extends Construct {
             return this;
         }
 
+      /**
+       * The format of the date time used in log entries. The awslogs driver will use this pattern to extract
+       * the timestamp from a log event and also to distinguish between multiple multi-line log events.
+       * <p>
+       * Default: %Y-%m-%dT%H:%M:%S.%f%z (to work with JSON formatted logs created with <a href="https://github.com/osiegmar/logback-awslogs-json-encoder">awslogs JSON Encoder</a>).
+       * <p>
+       * See also: <a href="https://docs.docker.com/config/containers/logging/awslogs/#awslogs-datetime-format">awslogs driver</a>
+       */
+      public ServiceInputParameters withAwsLogsDateTimeFormat(String awsLogsDateTimeFormat) {
+        this.awslogsDateTimeFormat = awsLogsDateTimeFormat;
+        return this;
+      }
+
     }
 
     public Service(
@@ -400,7 +414,7 @@ public class Service extends Construct {
                                 "awslogs-group", logGroup.getLogGroupName(),
                                 "awslogs-region", awsEnvironment.getRegion(),
                                 "awslogs-stream-prefix", applicationEnvironment.prefix("stream"),
-                                "awslogs-multiline-pattern", "^[0-9]{4}-[0-9]{2}-[0-9]{2}"))
+                                "awslogs-datetime-format", serviceInputParameters.awslogsDateTimeFormat))
                         .build())
                 .portMappings(singletonList(CfnTaskDefinition.PortMappingProperty.builder()
                         .containerPort(serviceInputParameters.containerPort)
