@@ -28,91 +28,91 @@ import static java.util.Collections.singletonList;
  */
 public class JumpHost extends Construct {
 
-    private final ApplicationEnvironment applicationEnvironment;
+  private final ApplicationEnvironment applicationEnvironment;
 
-    public static class JumpHostInputParameters {
-        private final String keyName;
+  public JumpHost(
+    final Construct scope,
+    final String id,
+    final Environment environment,
+    final ApplicationEnvironment applicationEnvironment,
+    final JumpHostInputParameters jumpHostInputParameters,
+    final PostgresDatabase.DatabaseOutputParameters databaseOutputParameters) {
 
-        /**
-         * @param keyName the name of the key pair that will be installed in the jump host EC2 instance so you can
-         *                access it via SSH. This key pair must be created via the EC2 console beforehand.
-         */
-        public JumpHostInputParameters(String keyName) {
-            Objects.requireNonNull(keyName, "parameter 'keyName' cannot be null");
-            this.keyName = keyName;
-        }
+    super(scope, id);
+
+    this.applicationEnvironment = applicationEnvironment;
+
+    Network.NetworkOutputParameters networkOutputParameters = Network.getOutputParametersFromParameterStore(this, applicationEnvironment.getEnvironmentName());
+
+    CfnSecurityGroup jumpHostSecurityGroup = CfnSecurityGroup.Builder.create(this, "securityGroup")
+      .groupName(applicationEnvironment.prefix("jumpHostSecurityGroup"))
+      .groupDescription("SecurityGroup containing the jump host")
+      .vpcId(networkOutputParameters.getVpcId())
+      .build();
+
+    String databaseSecurityGroupId = databaseOutputParameters.getDatabaseSecurityGroupId();
+
+    allowAccessToJumpHost(jumpHostSecurityGroup);
+    allowAccessToDatabase(jumpHostSecurityGroup, databaseSecurityGroupId);
+
+    CfnInstance instance = createEc2Instance(
+      jumpHostInputParameters.keyName,
+      jumpHostSecurityGroup,
+      networkOutputParameters);
+
+    CfnOutput publicIpOutput = CfnOutput.Builder.create(this, "publicIp")
+      .value(instance.getAttrPublicIp())
+      .build();
+
+    applicationEnvironment.tag(this);
+
+  }
+
+  private CfnInstance createEc2Instance(
+    String keyName,
+    CfnSecurityGroup jumpHostSecurityGroup,
+    Network.NetworkOutputParameters networkOutputParameters) {
+
+    return CfnInstance.Builder.create(this, "jumpHostInstance")
+      .instanceType("t2.nano")
+      .securityGroupIds(singletonList(jumpHostSecurityGroup.getAttrGroupId()))
+      .imageId("ami-0f96495a064477ffb")
+      .subnetId(networkOutputParameters.getPublicSubnets().get(0))
+      .keyName(keyName)
+      .build();
+
+  }
+
+  private void allowAccessToDatabase(CfnSecurityGroup fromSecurityGroup, String toSecurityGroupId) {
+    CfnSecurityGroupIngress dbSecurityGroupIngress = CfnSecurityGroupIngress.Builder.create(this, "IngressFromJumpHost")
+      .sourceSecurityGroupId(fromSecurityGroup.getAttrGroupId())
+      .groupId(toSecurityGroupId)
+      .fromPort(5432)
+      .toPort(5432)
+      .ipProtocol("TCP")
+      .build();
+  }
+
+  private void allowAccessToJumpHost(CfnSecurityGroup jumpHostSecurityGroup) {
+    CfnSecurityGroupIngress jumpHostSecurityGroupIngress = CfnSecurityGroupIngress.Builder.create(this, "IngressFromOutside")
+      .groupId(jumpHostSecurityGroup.getAttrGroupId())
+      .fromPort(22)
+      .toPort(22)
+      .ipProtocol("TCP")
+      .cidrIp("0.0.0.0/0")
+      .build();
+  }
+
+  public static class JumpHostInputParameters {
+    private final String keyName;
+
+    /**
+     * @param keyName the name of the key pair that will be installed in the jump host EC2 instance so you can
+     *                access it via SSH. This key pair must be created via the EC2 console beforehand.
+     */
+    public JumpHostInputParameters(String keyName) {
+      Objects.requireNonNull(keyName, "parameter 'keyName' cannot be null");
+      this.keyName = keyName;
     }
-
-    public JumpHost(
-            final Construct scope,
-            final String id,
-            final Environment environment,
-            final ApplicationEnvironment applicationEnvironment,
-            final JumpHostInputParameters jumpHostInputParameters,
-            final PostgresDatabase.DatabaseOutputParameters databaseOutputParameters) {
-
-        super(scope, id);
-
-        this.applicationEnvironment = applicationEnvironment;
-
-        Network.NetworkOutputParameters networkOutputParameters = Network.getOutputParametersFromParameterStore(this, applicationEnvironment.getEnvironmentName());
-
-        CfnSecurityGroup jumpHostSecurityGroup = CfnSecurityGroup.Builder.create(this, "securityGroup")
-                .groupName(applicationEnvironment.prefix("jumpHostSecurityGroup"))
-                .groupDescription("SecurityGroup containing the jump host")
-                .vpcId(networkOutputParameters.getVpcId())
-                .build();
-
-        String databaseSecurityGroupId = databaseOutputParameters.getDatabaseSecurityGroupId();
-
-        allowAccessToJumpHost(jumpHostSecurityGroup);
-        allowAccessToDatabase(jumpHostSecurityGroup, databaseSecurityGroupId);
-
-        CfnInstance instance = createEc2Instance(
-                jumpHostInputParameters.keyName,
-                jumpHostSecurityGroup,
-                networkOutputParameters);
-
-        CfnOutput publicIpOutput = CfnOutput.Builder.create(this, "publicIp")
-                .value(instance.getAttrPublicIp())
-                .build();
-
-        applicationEnvironment.tag(this);
-
-    }
-
-    private CfnInstance createEc2Instance(
-            String keyName,
-            CfnSecurityGroup jumpHostSecurityGroup,
-            Network.NetworkOutputParameters networkOutputParameters) {
-
-        return CfnInstance.Builder.create(this, "jumpHostInstance")
-                .instanceType("t2.nano")
-                .securityGroupIds(singletonList(jumpHostSecurityGroup.getAttrGroupId()))
-                .imageId("ami-0f96495a064477ffb")
-                .subnetId(networkOutputParameters.getPublicSubnets().get(0))
-                .keyName(keyName)
-                .build();
-
-    }
-
-    private void allowAccessToDatabase(CfnSecurityGroup fromSecurityGroup, String toSecurityGroupId) {
-        CfnSecurityGroupIngress dbSecurityGroupIngress = CfnSecurityGroupIngress.Builder.create(this, "IngressFromJumpHost")
-                .sourceSecurityGroupId(fromSecurityGroup.getAttrGroupId())
-                .groupId(toSecurityGroupId)
-                .fromPort(5432)
-                .toPort(5432)
-                .ipProtocol("TCP")
-                .build();
-    }
-
-    private void allowAccessToJumpHost(CfnSecurityGroup jumpHostSecurityGroup) {
-        CfnSecurityGroupIngress jumpHostSecurityGroupIngress = CfnSecurityGroupIngress.Builder.create(this, "IngressFromOutside")
-                .groupId(jumpHostSecurityGroup.getAttrGroupId())
-                .fromPort(22)
-                .toPort(22)
-                .ipProtocol("TCP")
-                .cidrIp("0.0.0.0/0")
-                .build();
-    }
+  }
 }
