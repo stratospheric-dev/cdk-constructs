@@ -2,6 +2,7 @@ package dev.stratospheric.cdk;
 
 import software.amazon.awscdk.core.Construct;
 import software.amazon.awscdk.core.Environment;
+import software.amazon.awscdk.core.RemovalPolicy;
 import software.amazon.awscdk.services.ecr.IRepository;
 import software.amazon.awscdk.services.ecr.LifecycleRule;
 import software.amazon.awscdk.services.ecr.Repository;
@@ -27,6 +28,7 @@ public class DockerRepository extends Construct {
 
     this.ecrRepository = Repository.Builder.create(this, "ecrRepository")
       .repositoryName(dockerRepositoryInputParameters.dockerRepositoryName)
+      .removalPolicy(dockerRepositoryInputParameters.retainRegistryOnDelete ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY)
       .lifecycleRules(Collections.singletonList(LifecycleRule.builder()
         .rulePriority(1)
         .description("limit to " + dockerRepositoryInputParameters.maxImageCount + " images")
@@ -46,6 +48,7 @@ public class DockerRepository extends Construct {
     private final String dockerRepositoryName;
     private final String accountId;
     private final int maxImageCount;
+    private final boolean retainRegistryOnDelete;
 
     /**
      * @param dockerRepositoryName the name of the docker repository to create.
@@ -55,6 +58,7 @@ public class DockerRepository extends Construct {
       this.dockerRepositoryName = dockerRepositoryName;
       this.accountId = accountId;
       this.maxImageCount = 10;
+      this.retainRegistryOnDelete = true;
     }
 
     /**
@@ -68,6 +72,22 @@ public class DockerRepository extends Construct {
       this.accountId = accountId;
       this.maxImageCount = maxImageCount;
       this.dockerRepositoryName = dockerRepositoryName;
+      this.retainRegistryOnDelete = true;
+    }
+
+    /**
+     * @param dockerRepositoryName   the name of the docker repository to create.
+     * @param accountId              ID of the AWS account which shall have permission to push and pull the Docker repository.
+     * @param maxImageCount          the maximum number of images to be held in the repository before old images get deleted.
+     * @param retainRegistryOnDelete indicating whether or not the container registry should be destroyed or retained on deletion.
+     */
+    public DockerRepositoryInputParameters(String dockerRepositoryName, String accountId, int maxImageCount, boolean retainRegistryOnDelete) {
+      Objects.requireNonNull(accountId, "accountId must not be null");
+      Objects.requireNonNull(dockerRepositoryName, "dockerRepositoryName must not be null");
+      this.accountId = accountId;
+      this.maxImageCount = maxImageCount;
+      this.dockerRepositoryName = dockerRepositoryName;
+      this.retainRegistryOnDelete = retainRegistryOnDelete;
     }
   }
 }
