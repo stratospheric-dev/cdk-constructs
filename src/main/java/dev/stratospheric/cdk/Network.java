@@ -45,6 +45,7 @@ public class Network extends Construct {
   private static final String PARAMETER_PUBLIC_SUBNET_TWO = "publicSubnetIdTwo";
   private static final String PARAMETER_AVAILABILITY_ZONE_ONE = "availabilityZoneOne";
   private static final String PARAMETER_AVAILABILITY_ZONE_TWO = "availabilityZoneTwo";
+  private static final String PARAMETER_LOAD_BALANCER_ARN = "loadBalancerArn";
   private final IVpc vpc;
   private final String environmentName;
   private final ICluster ecsCluster;
@@ -97,7 +98,8 @@ public class Network extends Construct {
       getEcsClusterNameFromParameterStore(scope, environmentName),
       getIsolatedSubnetsFromParameterStore(scope, environmentName),
       getPublicSubnetsFromParameterStore(scope, environmentName),
-      getAvailabilityZonesFromParameterStore(scope, environmentName));
+      getAvailabilityZonesFromParameterStore(scope, environmentName),
+      getLoadBalancerArnFromParameterStore(scope,environmentName));
   }
 
   @NotNull
@@ -166,6 +168,11 @@ public class Network extends Construct {
       .getStringValue();
 
     return asList(availabilityZoneOne, availabilityZoneTwo);
+  }
+
+  private static String getLoadBalancerArnFromParameterStore(Construct scope, String environmentName) {
+    return StringParameter.fromStringParameterName(scope, PARAMETER_LOAD_BALANCER_ARN, createParameterName(environmentName, PARAMETER_LOAD_BALANCER_ARN))
+      .getStringValue();
   }
 
   public IVpc getVpc() {
@@ -360,6 +367,12 @@ public class Network extends Construct {
       .stringValue(this.vpc.getPublicSubnets().get(1).getSubnetId())
       .build();
 
+
+    StringParameter loadBalancerArn = StringParameter.Builder.create(this, "loadBalancerArn")
+      .parameterName(createParameterName(environmentName, PARAMETER_LOAD_BALANCER_ARN))
+      .stringValue(this.loadBalancer.getLoadBalancerArn())
+      .build();
+
   }
 
   /**
@@ -374,7 +387,8 @@ public class Network extends Construct {
       this.ecsCluster.getClusterName(),
       this.vpc.getIsolatedSubnets().stream().map(ISubnet::getSubnetId).collect(Collectors.toList()),
       this.vpc.getPublicSubnets().stream().map(ISubnet::getSubnetId).collect(Collectors.toList()),
-      this.vpc.getAvailabilityZones());
+      this.vpc.getAvailabilityZones(),
+      this.loadBalancer.getLoadBalancerArn());
   }
 
   public static class NetworkInputParameters {
@@ -409,6 +423,7 @@ public class Network extends Construct {
     private final List<String> isolatedSubnets;
     private final List<String> publicSubnets;
     private final List<String> availabilityZones;
+    private final String loadBalancerArn;
 
     public NetworkOutputParameters(
       String vpcId,
@@ -418,7 +433,8 @@ public class Network extends Construct {
       String ecsClusterName,
       List<String> isolatedSubnets,
       List<String> publicSubnets,
-      List<String> availabilityZones) {
+      List<String> availabilityZones,
+      String loadBalancerArn) {
       this.vpcId = vpcId;
       this.httpListenerArn = httpListenerArn;
       this.httpsListenerArn = httpsListenerArn;
@@ -427,6 +443,7 @@ public class Network extends Construct {
       this.isolatedSubnets = isolatedSubnets;
       this.publicSubnets = publicSubnets;
       this.availabilityZones = availabilityZones;
+      this.loadBalancerArn = loadBalancerArn;
     }
 
     /**
@@ -485,6 +502,11 @@ public class Network extends Construct {
       return this.availabilityZones;
     }
 
-
+    /**
+     * The ARN of the load balancer.
+     */
+    public String getLoadBalancerArn() {
+      return this.loadBalancerArn;
+    }
   }
 }
