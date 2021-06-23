@@ -55,6 +55,18 @@ public class ApplicationEnvironment {
     return this.toString() + "-" + string;
   }
 
+  /**
+   * Prefixes a string with the application name and environment name. Returns only the last <code>characterLimit</code>
+   * characters from the name.
+   */
+  public String prefix(String string, int characterLimit) {
+    String name = this.toString() + "-" + string;
+    if (name.length() <= characterLimit) {
+      return name;
+    }
+    return name.substring(name.length() - 21);
+  }
+
   public void tag(IConstruct construct) {
     Tags.of(construct).add("environment", environmentName);
     Tags.of(construct).add("application", applicationName);
