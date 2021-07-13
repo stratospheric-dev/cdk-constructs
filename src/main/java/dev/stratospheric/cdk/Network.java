@@ -46,6 +46,8 @@ public class Network extends Construct {
   private static final String PARAMETER_AVAILABILITY_ZONE_ONE = "availabilityZoneOne";
   private static final String PARAMETER_AVAILABILITY_ZONE_TWO = "availabilityZoneTwo";
   private static final String PARAMETER_LOAD_BALANCER_ARN = "loadBalancerArn";
+  private static final String PARAMETER_LOAD_BALANCER_DNS_NAME = "loadBalancerDnsName";
+  private static final String PARAMETER_LOAD_BALANCER_HOSTED_ZONE_ID = "loadBalancerCanonicalHostedZoneId";
   private final IVpc vpc;
   private final String environmentName;
   private final ICluster ecsCluster;
@@ -373,6 +375,15 @@ public class Network extends Construct {
       .stringValue(this.loadBalancer.getLoadBalancerArn())
       .build();
 
+    StringParameter loadBalancerDnsName = StringParameter.Builder.create(this, "loadBalancerDnsName")
+      .parameterName(createParameterName(environmentName, PARAMETER_LOAD_BALANCER_DNS_NAME))
+      .stringValue(this.loadBalancer.getLoadBalancerDnsName())
+      .build();
+
+    StringParameter loadBalancerCanonicalHostedZoneId = StringParameter.Builder.create(this, "loadBalancerCanonicalHostedZoneId")
+      .parameterName(createParameterName(environmentName, PARAMETER_LOAD_BALANCER_HOSTED_ZONE_ID))
+      .stringValue(this.loadBalancer.getLoadBalancerCanonicalHostedZoneId())
+      .build();
   }
 
   /**
