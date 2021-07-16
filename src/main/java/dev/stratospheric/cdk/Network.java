@@ -543,10 +543,16 @@ public class Network extends Construct {
       return this.loadBalancerArn;
     }
 
+    /**
+     * The DNS name of the load balancer.
+     */
     public String getLoadBalancerDnsName() {
       return loadBalancerDnsName;
     }
 
+    /**
+     * The hosted zone ID of the load balancer.
+     */
     public String getLoadBalancerCanonicalHostedZoneId() {
       return loadBalancerCanonicalHostedZoneId;
     }
