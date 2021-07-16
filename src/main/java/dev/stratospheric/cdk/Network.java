@@ -435,6 +435,8 @@ public class Network extends Construct {
     private final List<String> publicSubnets;
     private final List<String> availabilityZones;
     private final String loadBalancerArn;
+    private final String loadBalancerDnsName;
+    private final String loadBalancerCanonicalHostedZoneId;
 
     public NetworkOutputParameters(
       String vpcId,
@@ -445,7 +447,10 @@ public class Network extends Construct {
       List<String> isolatedSubnets,
       List<String> publicSubnets,
       List<String> availabilityZones,
-      String loadBalancerArn) {
+      String loadBalancerArn,
+      String loadBalancerDnsName,
+      String loadBalancerCanonicalHostedZoneId
+    ) {
       this.vpcId = vpcId;
       this.httpListenerArn = httpListenerArn;
       this.httpsListenerArn = httpsListenerArn;
@@ -455,6 +460,8 @@ public class Network extends Construct {
       this.publicSubnets = publicSubnets;
       this.availabilityZones = availabilityZones;
       this.loadBalancerArn = loadBalancerArn;
+      this.loadBalancerDnsName = loadBalancerDnsName;
+      this.loadBalancerCanonicalHostedZoneId = loadBalancerCanonicalHostedZoneId;
     }
 
     /**
@@ -518,6 +525,14 @@ public class Network extends Construct {
      */
     public String getLoadBalancerArn() {
       return this.loadBalancerArn;
+    }
+
+    public String getLoadBalancerDnsName() {
+      return loadBalancerDnsName;
+    }
+
+    public String getLoadBalancerCanonicalHostedZoneId() {
+      return loadBalancerCanonicalHostedZoneId;
     }
   }
 }
