@@ -55,7 +55,7 @@
     <connection>scm:git:git://github.com/stratospheric-dev/cdk-constructs.git</connection>
     <developerConnection>scm:git:https://github.com/stratospheric-dev/cdk-constructs.git</developerConnection>
     <url>https://github.com/stratospheric-dev/cdk-constructs</url>
-    <tag>cdk-constructs-0.0.16</tag>
+    <tag>cdk-constructs-0.0.23</tag>
   </scm>
 
   <distributionManagement>

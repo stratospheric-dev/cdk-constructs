@@ -20,7 +20,7 @@ Load the dependency from Maven Central by adding this to your `pom.xml`:
   <dependency>
     <groupId>dev.stratospheric</groupId>
     <artifactId>cdk-constructs</artifactId>
-    <version>0.0.16</version>
+    <version>0.0.23</version>
   </dependency>
 </dependencies>
 ```
@@ -28,7 +28,7 @@ Load the dependency from Maven Central by adding this to your `pom.xml`:
 ... our your `build.gradle`:
 
 ```groovy
-implementation('dev.stratospheric:cdk-constructs:0.0.16')
+implementation('dev.stratospheric:cdk-constructs:0.0.23')
 ```
 
 ## Construct Overview
