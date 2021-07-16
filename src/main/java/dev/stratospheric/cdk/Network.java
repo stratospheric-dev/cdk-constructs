@@ -101,7 +101,10 @@ public class Network extends Construct {
       getIsolatedSubnetsFromParameterStore(scope, environmentName),
       getPublicSubnetsFromParameterStore(scope, environmentName),
       getAvailabilityZonesFromParameterStore(scope, environmentName),
-      getLoadBalancerArnFromParameterStore(scope,environmentName));
+      getLoadBalancerArnFromParameterStore(scope,environmentName),
+      getLoadBalancerDnsNameFromParameterStore(scope,environmentName),
+      getLoadBalancerCanonicalHostedZoneIdFromParameterStore(scope,environmentName)
+    );
   }
 
   @NotNull
@@ -174,6 +177,16 @@ public class Network extends Construct {
 
   private static String getLoadBalancerArnFromParameterStore(Construct scope, String environmentName) {
     return StringParameter.fromStringParameterName(scope, PARAMETER_LOAD_BALANCER_ARN, createParameterName(environmentName, PARAMETER_LOAD_BALANCER_ARN))
+      .getStringValue();
+  }
+
+  private static String getLoadBalancerDnsNameFromParameterStore(Construct scope, String environmentName) {
+    return StringParameter.fromStringParameterName(scope, PARAMETER_LOAD_BALANCER_DNS_NAME, createParameterName(environmentName, PARAMETER_LOAD_BALANCER_DNS_NAME))
+      .getStringValue();
+  }
+
+  private static String getLoadBalancerCanonicalHostedZoneIdFromParameterStore(Construct scope, String environmentName) {
+    return StringParameter.fromStringParameterName(scope, PARAMETER_LOAD_BALANCER_HOSTED_ZONE_ID, createParameterName(environmentName, PARAMETER_LOAD_BALANCER_HOSTED_ZONE_ID))
       .getStringValue();
   }
 
@@ -399,7 +412,10 @@ public class Network extends Construct {
       this.vpc.getIsolatedSubnets().stream().map(ISubnet::getSubnetId).collect(Collectors.toList()),
       this.vpc.getPublicSubnets().stream().map(ISubnet::getSubnetId).collect(Collectors.toList()),
       this.vpc.getAvailabilityZones(),
-      this.loadBalancer.getLoadBalancerArn());
+      this.loadBalancer.getLoadBalancerArn(),
+      this.loadBalancer.getLoadBalancerDnsName(),
+      this.loadBalancer.getLoadBalancerCanonicalHostedZoneId()
+    );
   }
 
   public static class NetworkInputParameters {
