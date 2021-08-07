@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>dev.stratospheric</groupId>
   <artifactId>cdk-constructs</artifactId>
-  <version>0.0.20-SNAPSHOT</version>
+  <version>0.0.24-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>CDK Constructs</name>
@@ -16,7 +15,7 @@
     <maven.compiler.target>11</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <cdk.version>1.108.1</cdk.version>
+    <cdk.version>1.114.0</cdk.version>
   </properties>
 
   <organization>
@@ -56,7 +55,7 @@
     <connection>scm:git:git://github.com/stratospheric-dev/cdk-constructs.git</connection>
     <developerConnection>scm:git:https://github.com/stratospheric-dev/cdk-constructs.git</developerConnection>
     <url>https://github.com/stratospheric-dev/cdk-constructs</url>
-    <tag>cdk-constructs-0.0.16</tag>
+    <tag>cdk-constructs-0.0.23</tag>
   </scm>
 
   <distributionManagement>

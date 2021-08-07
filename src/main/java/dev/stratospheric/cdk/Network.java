@@ -46,6 +46,8 @@ public class Network extends Construct {
   private static final String PARAMETER_AVAILABILITY_ZONE_ONE = "availabilityZoneOne";
   private static final String PARAMETER_AVAILABILITY_ZONE_TWO = "availabilityZoneTwo";
   private static final String PARAMETER_LOAD_BALANCER_ARN = "loadBalancerArn";
+  private static final String PARAMETER_LOAD_BALANCER_DNS_NAME = "loadBalancerDnsName";
+  private static final String PARAMETER_LOAD_BALANCER_HOSTED_ZONE_ID = "loadBalancerCanonicalHostedZoneId";
   private final IVpc vpc;
   private final String environmentName;
   private final ICluster ecsCluster;
@@ -99,7 +101,10 @@ public class Network extends Construct {
       getIsolatedSubnetsFromParameterStore(scope, environmentName),
       getPublicSubnetsFromParameterStore(scope, environmentName),
       getAvailabilityZonesFromParameterStore(scope, environmentName),
-      getLoadBalancerArnFromParameterStore(scope, environmentName));
+      getLoadBalancerArnFromParameterStore(scope, environmentName),
+      getLoadBalancerDnsNameFromParameterStore(scope,environmentName),
+      getLoadBalancerCanonicalHostedZoneIdFromParameterStore(scope,environmentName)
+    );
   }
 
   @NotNull
@@ -172,6 +177,16 @@ public class Network extends Construct {
 
   private static String getLoadBalancerArnFromParameterStore(Construct scope, String environmentName) {
     return StringParameter.fromStringParameterName(scope, PARAMETER_LOAD_BALANCER_ARN, createParameterName(environmentName, PARAMETER_LOAD_BALANCER_ARN))
+      .getStringValue();
+  }
+
+  private static String getLoadBalancerDnsNameFromParameterStore(Construct scope, String environmentName) {
+    return StringParameter.fromStringParameterName(scope, PARAMETER_LOAD_BALANCER_DNS_NAME, createParameterName(environmentName, PARAMETER_LOAD_BALANCER_DNS_NAME))
+      .getStringValue();
+  }
+
+  private static String getLoadBalancerCanonicalHostedZoneIdFromParameterStore(Construct scope, String environmentName) {
+    return StringParameter.fromStringParameterName(scope, PARAMETER_LOAD_BALANCER_HOSTED_ZONE_ID, createParameterName(environmentName, PARAMETER_LOAD_BALANCER_HOSTED_ZONE_ID))
       .getStringValue();
   }
 
@@ -373,6 +388,15 @@ public class Network extends Construct {
       .stringValue(this.loadBalancer.getLoadBalancerArn())
       .build();
 
+    StringParameter loadBalancerDnsName = StringParameter.Builder.create(this, "loadBalancerDnsName")
+      .parameterName(createParameterName(environmentName, PARAMETER_LOAD_BALANCER_DNS_NAME))
+      .stringValue(this.loadBalancer.getLoadBalancerDnsName())
+      .build();
+
+    StringParameter loadBalancerCanonicalHostedZoneId = StringParameter.Builder.create(this, "loadBalancerCanonicalHostedZoneId")
+      .parameterName(createParameterName(environmentName, PARAMETER_LOAD_BALANCER_HOSTED_ZONE_ID))
+      .stringValue(this.loadBalancer.getLoadBalancerCanonicalHostedZoneId())
+      .build();
   }
 
   /**
@@ -388,7 +412,10 @@ public class Network extends Construct {
       this.vpc.getIsolatedSubnets().stream().map(ISubnet::getSubnetId).collect(Collectors.toList()),
       this.vpc.getPublicSubnets().stream().map(ISubnet::getSubnetId).collect(Collectors.toList()),
       this.vpc.getAvailabilityZones(),
-      this.loadBalancer.getLoadBalancerArn());
+      this.loadBalancer.getLoadBalancerArn(),
+      this.loadBalancer.getLoadBalancerDnsName(),
+      this.loadBalancer.getLoadBalancerCanonicalHostedZoneId()
+    );
   }
 
   public static class NetworkInputParameters {
@@ -424,6 +451,8 @@ public class Network extends Construct {
     private final List<String> publicSubnets;
     private final List<String> availabilityZones;
     private final String loadBalancerArn;
+    private final String loadBalancerDnsName;
+    private final String loadBalancerCanonicalHostedZoneId;
 
     public NetworkOutputParameters(
       String vpcId,
@@ -434,7 +463,10 @@ public class Network extends Construct {
       List<String> isolatedSubnets,
       List<String> publicSubnets,
       List<String> availabilityZones,
-      String loadBalancerArn) {
+      String loadBalancerArn,
+      String loadBalancerDnsName,
+      String loadBalancerCanonicalHostedZoneId
+    ) {
       this.vpcId = vpcId;
       this.httpListenerArn = httpListenerArn;
       this.httpsListenerArn = httpsListenerArn;
@@ -444,6 +476,8 @@ public class Network extends Construct {
       this.publicSubnets = publicSubnets;
       this.availabilityZones = availabilityZones;
       this.loadBalancerArn = loadBalancerArn;
+      this.loadBalancerDnsName = loadBalancerDnsName;
+      this.loadBalancerCanonicalHostedZoneId = loadBalancerCanonicalHostedZoneId;
     }
 
     /**
@@ -507,6 +541,20 @@ public class Network extends Construct {
      */
     public String getLoadBalancerArn() {
       return this.loadBalancerArn;
+    }
+
+    /**
+     * The DNS name of the load balancer.
+     */
+    public String getLoadBalancerDnsName() {
+      return loadBalancerDnsName;
+    }
+
+    /**
+     * The hosted zone ID of the load balancer.
+     */
+    public String getLoadBalancerCanonicalHostedZoneId() {
+      return loadBalancerCanonicalHostedZoneId;
     }
   }
 }
