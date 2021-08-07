@@ -99,7 +99,7 @@ public class Network extends Construct {
       getIsolatedSubnetsFromParameterStore(scope, environmentName),
       getPublicSubnetsFromParameterStore(scope, environmentName),
       getAvailabilityZonesFromParameterStore(scope, environmentName),
-      getLoadBalancerArnFromParameterStore(scope,environmentName));
+      getLoadBalancerArnFromParameterStore(scope, environmentName));
   }
 
   @NotNull
