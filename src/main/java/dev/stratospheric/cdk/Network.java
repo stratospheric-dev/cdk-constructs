@@ -125,7 +125,7 @@ public class Network extends Construct {
   private static Optional<String> getHttpsListenerArnFromParameterStore(Construct scope, String environmentName) {
     String value = StringParameter.fromStringParameterName(scope, PARAMETER_HTTPS_LISTENER, createParameterName(environmentName, PARAMETER_HTTPS_LISTENER))
       .getStringValue();
-    if (value.equals("null")) {
+    if ("null".equals(value)) {
       return Optional.empty();
     } else {
       return Optional.ofNullable(value);
@@ -427,8 +427,7 @@ public class Network extends Construct {
      *                          the load balancer will only listen to plain HTTP.
      */
     public NetworkInputParameters(String sslCertificateArn) {
-      Objects.requireNonNull(sslCertificateArn);
-      this.sslCertificateArn = Optional.of(sslCertificateArn);
+      this.sslCertificateArn = Optional.ofNullable(sslCertificateArn);
     }
 
     public NetworkInputParameters() {
