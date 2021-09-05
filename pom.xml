@@ -15,7 +15,7 @@
     <maven.compiler.target>11</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <cdk.version>1.114.0</cdk.version>
+    <cdk.version>1.121.0</cdk.version>
   </properties>
 
   <organization>
