@@ -1,8 +1,7 @@
 package dev.stratospheric.cdk;
 
-import software.amazon.awscdk.core.Construct;
-import software.amazon.awscdk.core.Environment;
-import software.amazon.awscdk.core.RemovalPolicy;
+import org.jetbrains.annotations.NotNull;
+import software.amazon.awscdk.core.*;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroup;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroupIngress;
 import software.amazon.awscdk.services.ecr.IRepository;
@@ -10,6 +9,7 @@ import software.amazon.awscdk.services.ecr.Repository;
 import software.amazon.awscdk.services.ecs.CfnService;
 import software.amazon.awscdk.services.ecs.CfnTaskDefinition;
 import software.amazon.awscdk.services.elasticloadbalancingv2.CfnListenerRule;
+import software.amazon.awscdk.services.elasticloadbalancingv2.CfnListenerRule.Builder;
 import software.amazon.awscdk.services.elasticloadbalancingv2.CfnTargetGroup;
 import software.amazon.awscdk.services.iam.*;
 import software.amazon.awscdk.services.logs.LogGroup;
@@ -67,15 +67,20 @@ public class Service extends Construct {
       .build();
 
     Optional<String> httpsListenerArn = networkOutputParameters.getHttpsListenerArn();
-    CfnListenerRule httpsListenerRule = null;
-    if (httpsListenerArn.isPresent()) {
-      httpsListenerRule = CfnListenerRule.Builder.create(this, "httpsListenerRule")
+
+    CfnListenerRule httpsListenerRule = CfnListenerRule.Builder.create(this, "httpsListenerRule")
         .actions(singletonList(actionProperty))
         .conditions(singletonList(condition))
         .listenerArn(httpsListenerArn.get())
         .priority(1)
         .build();
-    }
+
+    // we only want the https listener to be deployed if the httpsListenerArn has a value different from "null"
+    CfnCondition httpsListenerRuleCondition = CfnCondition.Builder.create(this, "httpsListenerRuleCondition")
+      .expression(Fn.conditionNot(Fn.conditionEquals(httpsListenerArn.get(), "null")))
+      .build();
+
+    httpsListenerRule.getCfnOptions().setCondition(httpsListenerRuleCondition);
 
     CfnListenerRule httpListenerRule = CfnListenerRule.Builder.create(this, "httpListenerRule")
       .actions(singletonList(actionProperty))
@@ -209,11 +214,7 @@ public class Service extends Construct {
 
     // Adding an explicit dependency from the service to the listeners to avoid "has no load balancer associated" error
     // (see https://stackoverflow.com/questions/61250772/how-can-i-create-a-dependson-relation-between-ec2-and-rds-using-aws-cdk).
-    if (httpsListenerArn.isPresent()) {
-      service.addDependsOn(httpsListenerRule);
-    }
     service.addDependsOn(httpListenerRule);
-
 
     applicationEnvironment.tag(this);
   }
