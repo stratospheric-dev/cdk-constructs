@@ -20,7 +20,7 @@ Load the dependency from Maven Central by adding this to your `pom.xml`:
   <dependency>
     <groupId>dev.stratospheric</groupId>
     <artifactId>cdk-constructs</artifactId>
-    <version>0.0.23</version>
+    <version>0.0.24</version>
   </dependency>
 </dependencies>
 ```
