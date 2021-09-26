@@ -125,7 +125,7 @@ public class Network extends Construct {
   private static Optional<String> getHttpsListenerArnFromParameterStore(Construct scope, String environmentName) {
     String value = StringParameter.fromStringParameterName(scope, PARAMETER_HTTPS_LISTENER, createParameterName(environmentName, PARAMETER_HTTPS_LISTENER))
       .getStringValue();
-    if (value.equals("null")) {
+    if ("null".equals(value)) {
       return Optional.empty();
     } else {
       return Optional.ofNullable(value);
@@ -419,20 +419,27 @@ public class Network extends Construct {
   }
 
   public static class NetworkInputParameters {
-    private final Optional<String> sslCertificateArn;
+    private Optional<String> sslCertificateArn;
 
     /**
      * @param sslCertificateArn the ARN of the SSL certificate that the load balancer will use
      *                          to terminate HTTPS communication. If no SSL certificate is passed,
      *                          the load balancer will only listen to plain HTTP.
+     * @deprecated use {@link #withSslCertificateArn(String)} instead
      */
+    @Deprecated
     public NetworkInputParameters(String sslCertificateArn) {
-      Objects.requireNonNull(sslCertificateArn);
-      this.sslCertificateArn = Optional.of(sslCertificateArn);
+      this.sslCertificateArn = Optional.ofNullable(sslCertificateArn);
     }
 
     public NetworkInputParameters() {
       this.sslCertificateArn = Optional.empty();
+    }
+
+    public NetworkInputParameters withSslCertificateArn(String sslCertificateArn){
+      Objects.requireNonNull(sslCertificateArn);
+      this.sslCertificateArn = Optional.of(sslCertificateArn);
+      return this;
     }
 
     public Optional<String> getSslCertificateArn() {
