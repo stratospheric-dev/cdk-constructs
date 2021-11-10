@@ -128,7 +128,7 @@ public class Network extends Construct {
     if ("null".equals(value)) {
       return Optional.empty();
     } else {
-      return Optional.ofNullable(value);
+      return Optional.of(value);
     }
   }
 
