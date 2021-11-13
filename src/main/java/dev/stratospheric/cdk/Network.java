@@ -275,7 +275,7 @@ public class Network extends Construct {
       .securityGroup(loadbalancerSecurityGroup)
       .build();
 
-    IApplicationTargetGroup dummyTargetGroup = ApplicationTargetGroup.Builder.create(this, "defaultTargetGroup")
+    IApplicationTargetGroup dummyTargetGroup = ApplicationTargetGroup.Builder.create(this, "dummyTargetGroup")
       .vpc(vpc)
       .port(8080)
       .protocol(ApplicationProtocol.HTTP)
@@ -289,7 +289,7 @@ public class Network extends Construct {
       .open(true)
       .build());
 
-    httpListener.addTargetGroups("http-defaultTargetGroup", AddApplicationTargetGroupsProps.builder()
+    httpListener.addTargetGroups("http-dummy", AddApplicationTargetGroupsProps.builder()
       .targetGroups(Collections.singletonList(dummyTargetGroup))
       .build());
 
@@ -302,25 +302,10 @@ public class Network extends Construct {
         .open(true)
         .build());
 
-      httpsListener.addTargetGroups("https-defaultTargetGroup", AddApplicationTargetGroupsProps.builder()
+
+      httpsListener.addTargetGroups("https-dummy", AddApplicationTargetGroupsProps.builder()
         .targetGroups(Collections.singletonList(dummyTargetGroup))
         .build());
-
-      ListenerAction redirectAction = ListenerAction.redirect(
-        RedirectOptions.builder()
-          .port("443")
-          .build()
-      );
-      ApplicationListenerRule applicationListenerRule = new ApplicationListenerRule(
-        this,
-        "HttpListenerRule",
-        ApplicationListenerRuleProps.builder()
-          .listener(httpsListener)
-          .priority(1)
-          .conditions(List.of(ListenerCondition.pathPatterns(List.of("*"))))
-          .action(redirectAction)
-          .build()
-      );
     }
 
     createOutputParameters();
