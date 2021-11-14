@@ -315,7 +315,7 @@ public class Network extends Construct {
         this,
         "HttpListenerRule",
         ApplicationListenerRuleProps.builder()
-          .listener(httpsListener)
+          .listener(httpListener)
           .priority(1)
           .conditions(List.of(ListenerCondition.pathPatterns(List.of("*"))))
           .action(redirectAction)
