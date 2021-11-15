@@ -108,7 +108,6 @@ Also, a monolithic CDK app would require you to pass the parameters for ALL cons
 
 ## Release Process
 
-To release a new version of `cdk-constructs`, please create a PR for the `release` branch. Once it's merged, we'll automatically deploy a new version to Maven Central.
-
+Head over to the [release information document](RELEASE.md).
 
 
