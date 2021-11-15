@@ -33,6 +33,8 @@ implementation('dev.stratospheric:cdk-constructs:${latestVersion}')
 
 The `latestVersion` is: [![](https://img.shields.io/maven-central/v/dev.stratospheric/cdk-constructs.svg?label=)](https://search.maven.org/search?q=g:%22dev.stratospheric%22%20AND%20a:%22cdk-constructs%22)
 
+Use this version without the `v` prefix inside your `pom.xml` or `build.gradle`: `v0.0.13` -> `0.0.13`.
+
 ## Construct Overview
 
 A short description of the constructs in this project. For a more details description have a look at the Javadocs.
