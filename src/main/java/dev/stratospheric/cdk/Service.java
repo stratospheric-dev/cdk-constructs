@@ -68,19 +68,21 @@ public class Service extends Construct {
 
     Optional<String> httpsListenerArn = networkOutputParameters.getHttpsListenerArn();
 
-    CfnListenerRule httpsListenerRule = CfnListenerRule.Builder.create(this, "httpsListenerRule")
+    // We only want the HTTPS listener to be deployed if the httpsListenerArn is present.
+    if (httpsListenerArn.isPresent()) {
+      CfnListenerRule httpsListenerRule = CfnListenerRule.Builder.create(this, "httpsListenerRule")
         .actions(singletonList(actionProperty))
         .conditions(singletonList(condition))
         .listenerArn(httpsListenerArn.get())
         .priority(1)
         .build();
 
-    // we only want the https listener to be deployed if the httpsListenerArn has a value different from "null"
-    CfnCondition httpsListenerRuleCondition = CfnCondition.Builder.create(this, "httpsListenerRuleCondition")
-      .expression(Fn.conditionNot(Fn.conditionEquals(httpsListenerArn.get(), "null")))
-      .build();
+      CfnCondition httpsListenerRuleCondition = CfnCondition.Builder.create(this, "httpsListenerRuleCondition")
+        .expression(Fn.conditionNot(Fn.conditionEquals(httpsListenerArn.get(), "null")))
+        .build();
 
-    httpsListenerRule.getCfnOptions().setCondition(httpsListenerRuleCondition);
+      httpsListenerRule.getCfnOptions().setCondition(httpsListenerRuleCondition);
+    }
 
     CfnListenerRule httpListenerRule = CfnListenerRule.Builder.create(this, "httpListenerRule")
       .actions(singletonList(actionProperty))
