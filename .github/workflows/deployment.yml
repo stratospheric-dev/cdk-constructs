@@ -24,13 +24,7 @@ jobs:
         server-password: OSSRH_PASSWORD
         gpg-passphrase: GPG_PASSPHRASE
         gpg-private-key: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
-
-    - name: "Setup cache"
-      uses: actions/cache@v2
-      with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-maven-
+        cache: 'maven'
 
     - name: "Run Maven build"
       run: ./mvnw -B package
