@@ -20,7 +20,7 @@ Load the dependency from Maven Central by adding this to your `pom.xml`:
   <dependency>
     <groupId>dev.stratospheric</groupId>
     <artifactId>cdk-constructs</artifactId>
-    <version>0.0.25</version>
+    <version>${latestVersion}</version>
   </dependency>
 </dependencies>
 ```
@@ -28,8 +28,10 @@ Load the dependency from Maven Central by adding this to your `pom.xml`:
 ... our your `build.gradle`:
 
 ```groovy
-implementation('dev.stratospheric:cdk-constructs:0.0.23')
+implementation('dev.stratospheric:cdk-constructs:${latestVersion}')
 ```
+
+The `latestVersion` is: [![](https://img.shields.io/maven-central/v/dev.stratospheric/cdk-constructs.svg?label=)](https://search.maven.org/search?q=g:%22dev.stratospheric%22%20AND%20a:%22cdk-constructs%22)
 
 ## Construct Overview
 
