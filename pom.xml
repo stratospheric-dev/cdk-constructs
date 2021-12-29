@@ -4,7 +4,7 @@
 
   <groupId>dev.stratospheric</groupId>
   <artifactId>cdk-constructs</artifactId>
-  <version>2.0.0-SNAPSHOT</version>
+  <version>0.0.26-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>CDK Constructs</name>
