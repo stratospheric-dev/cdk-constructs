@@ -107,7 +107,6 @@
     </profile>
   </profiles>
 
-<dependencyManagement>
   <dependencies>
     <dependency>
       <groupId>software.amazon.awscdk</groupId>
@@ -120,7 +119,6 @@
       <version>${constructs.version}</version>
     </dependency>
   </dependencies>
-</dependencyManagement>
 
   <build>
     <extensions>
