@@ -1,7 +1,7 @@
 package dev.stratospheric.cdk;
 
-import org.jetbrains.annotations.NotNull;
-import software.amazon.awscdk.core.*;
+import software.amazon.awscdk.*;
+import software.constructs.Construct;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroup;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroupIngress;
 import software.amazon.awscdk.services.ecr.IRepository;
@@ -9,7 +9,6 @@ import software.amazon.awscdk.services.ecr.Repository;
 import software.amazon.awscdk.services.ecs.CfnService;
 import software.amazon.awscdk.services.ecs.CfnTaskDefinition;
 import software.amazon.awscdk.services.elasticloadbalancingv2.CfnListenerRule;
-import software.amazon.awscdk.services.elasticloadbalancingv2.CfnListenerRule.Builder;
 import software.amazon.awscdk.services.elasticloadbalancingv2.CfnTargetGroup;
 import software.amazon.awscdk.services.iam.*;
 import software.amazon.awscdk.services.logs.LogGroup;

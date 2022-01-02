@@ -1,7 +1,7 @@
 package dev.stratospheric.cdk;
 
-import software.amazon.awscdk.core.IConstruct;
-import software.amazon.awscdk.core.Tags;
+import software.constructs.IConstruct;
+import software.amazon.awscdk.Tags;
 
 /**
  * An application can be deployed into multiple environments (staging, production, ...).

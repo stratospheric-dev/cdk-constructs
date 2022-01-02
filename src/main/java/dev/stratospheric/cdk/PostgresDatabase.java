@@ -1,8 +1,8 @@
 package dev.stratospheric.cdk;
 
 import org.jetbrains.annotations.NotNull;
-import software.amazon.awscdk.core.Construct;
-import software.amazon.awscdk.core.Environment;
+import software.constructs.Construct;
+import software.amazon.awscdk.Environment;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroup;
 import software.amazon.awscdk.services.rds.CfnDBInstance;
 import software.amazon.awscdk.services.rds.CfnDBSubnetGroup;

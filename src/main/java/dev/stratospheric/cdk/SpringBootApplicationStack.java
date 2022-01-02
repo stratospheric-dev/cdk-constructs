@@ -1,6 +1,7 @@
 package dev.stratospheric.cdk;
 
-import software.amazon.awscdk.core.*;
+import software.amazon.awscdk.*;
+import software.constructs.Construct;
 
 import java.util.Collections;
 

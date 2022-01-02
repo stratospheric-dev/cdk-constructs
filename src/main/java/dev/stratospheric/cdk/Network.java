@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import software.amazon.awscdk.core.Construct;
-import software.amazon.awscdk.core.Environment;
-import software.amazon.awscdk.core.Tags;
+import software.constructs.Construct;
+import software.amazon.awscdk.Environment;
+import software.amazon.awscdk.Tags;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroupIngress;
 import software.amazon.awscdk.services.ec2.ISecurityGroup;
 import software.amazon.awscdk.services.ec2.ISubnet;
@@ -252,7 +252,7 @@ public class Network extends Construct {
       .build();
 
     SubnetConfiguration isolatedSubnets = SubnetConfiguration.builder()
-      .subnetType(SubnetType.ISOLATED)
+      .subnetType(SubnetType.PRIVATE_ISOLATED)
       .name(prefixWithEnvironmentName("isolatedSubnet"))
       .build();
 
