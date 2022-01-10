@@ -1,7 +1,17 @@
 package dev.stratospheric.cdk;
 
-import org.jetbrains.annotations.NotNull;
-import software.amazon.awscdk.core.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import software.amazon.awscdk.CfnCondition;
+import software.amazon.awscdk.Environment;
+import software.amazon.awscdk.Fn;
+import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroup;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroupIngress;
 import software.amazon.awscdk.services.ecr.IRepository;
@@ -9,13 +19,15 @@ import software.amazon.awscdk.services.ecr.Repository;
 import software.amazon.awscdk.services.ecs.CfnService;
 import software.amazon.awscdk.services.ecs.CfnTaskDefinition;
 import software.amazon.awscdk.services.elasticloadbalancingv2.CfnListenerRule;
-import software.amazon.awscdk.services.elasticloadbalancingv2.CfnListenerRule.Builder;
 import software.amazon.awscdk.services.elasticloadbalancingv2.CfnTargetGroup;
-import software.amazon.awscdk.services.iam.*;
+import software.amazon.awscdk.services.iam.Effect;
+import software.amazon.awscdk.services.iam.PolicyDocument;
+import software.amazon.awscdk.services.iam.PolicyStatement;
+import software.amazon.awscdk.services.iam.Role;
+import software.amazon.awscdk.services.iam.ServicePrincipal;
 import software.amazon.awscdk.services.logs.LogGroup;
 import software.amazon.awscdk.services.logs.RetentionDays;
-
-import java.util.*;
+import software.constructs.Construct;
 
 import static java.util.Collections.singletonList;
 

@@ -1,15 +1,15 @@
 package dev.stratospheric.cdk;
 
-import software.amazon.awscdk.core.Construct;
-import software.amazon.awscdk.core.Environment;
-import software.amazon.awscdk.core.RemovalPolicy;
+import java.util.Collections;
+import java.util.Objects;
+
+import software.amazon.awscdk.Environment;
+import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.services.ecr.IRepository;
 import software.amazon.awscdk.services.ecr.LifecycleRule;
 import software.amazon.awscdk.services.ecr.Repository;
 import software.amazon.awscdk.services.iam.AccountPrincipal;
-
-import java.util.Collections;
-import java.util.Objects;
+import software.constructs.Construct;
 
 /**
  * Provisions an ECR repository for Docker images. Every user in the given account will have access
