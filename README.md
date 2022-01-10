@@ -11,7 +11,7 @@ The constructs have been built to deploy a real application into production and 
 
 These constructs are explained in further detail in [our book](https://stratospheric.dev).
 
-Starting from version 0.1.0, this constructs library only supports the AWS CDK v2. For migrating your existing AWS CDK v1 setup, follow the [official AWS migration guide](https://docs.aws.amazon.com/cdk/v2/guide/migrating-v2.html).
+From version 0.1.0 onwards, this constructs library only supports the AWS CDK v2. For migrating your existing AWS CDK v1 setup, follow the [official AWS migration guide](https://docs.aws.amazon.com/cdk/v2/guide/migrating-v2.html).
 
 ## Installation
 
