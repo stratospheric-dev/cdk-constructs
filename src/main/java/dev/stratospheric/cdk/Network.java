@@ -8,9 +8,8 @@ import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import software.amazon.awscdk.core.Construct;
-import software.amazon.awscdk.core.Environment;
-import software.amazon.awscdk.core.Tags;
+import software.amazon.awscdk.Environment;
+import software.amazon.awscdk.Tags;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroupIngress;
 import software.amazon.awscdk.services.ec2.ISecurityGroup;
 import software.amazon.awscdk.services.ec2.ISubnet;
@@ -38,6 +37,7 @@ import software.amazon.awscdk.services.elasticloadbalancingv2.ListenerCondition;
 import software.amazon.awscdk.services.elasticloadbalancingv2.RedirectOptions;
 import software.amazon.awscdk.services.elasticloadbalancingv2.TargetType;
 import software.amazon.awscdk.services.ssm.StringParameter;
+import software.constructs.Construct;
 
 import static java.util.Arrays.asList;
 
@@ -252,7 +252,7 @@ public class Network extends Construct {
       .build();
 
     SubnetConfiguration isolatedSubnets = SubnetConfiguration.builder()
-      .subnetType(SubnetType.ISOLATED)
+      .subnetType(SubnetType.PRIVATE_ISOLATED)
       .name(prefixWithEnvironmentName("isolatedSubnet"))
       .build();
 

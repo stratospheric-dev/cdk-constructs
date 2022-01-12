@@ -1,8 +1,13 @@
 package dev.stratospheric.cdk;
 
-import software.amazon.awscdk.core.*;
-
 import java.util.Collections;
+
+import software.amazon.awscdk.CfnOutput;
+import software.amazon.awscdk.CfnOutputProps;
+import software.amazon.awscdk.Environment;
+import software.amazon.awscdk.Stack;
+import software.amazon.awscdk.StackProps;
+import software.constructs.Construct;
 
 /**
  * This stack creates a {@link Network} and a {@link Service} that deploys a given Docker image. The {@link Service} is

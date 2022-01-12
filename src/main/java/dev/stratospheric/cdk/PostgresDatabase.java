@@ -1,8 +1,10 @@
 package dev.stratospheric.cdk;
 
+import java.util.Collections;
+import java.util.Objects;
+
 import org.jetbrains.annotations.NotNull;
-import software.amazon.awscdk.core.Construct;
-import software.amazon.awscdk.core.Environment;
+import software.amazon.awscdk.Environment;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroup;
 import software.amazon.awscdk.services.rds.CfnDBInstance;
 import software.amazon.awscdk.services.rds.CfnDBSubnetGroup;
@@ -11,9 +13,7 @@ import software.amazon.awscdk.services.secretsmanager.ISecret;
 import software.amazon.awscdk.services.secretsmanager.Secret;
 import software.amazon.awscdk.services.secretsmanager.SecretStringGenerator;
 import software.amazon.awscdk.services.ssm.StringParameter;
-
-import java.util.Collections;
-import java.util.Objects;
+import software.constructs.Construct;
 
 /**
  * Creates a Postgres database in the isolated subnets of a given VPC.
