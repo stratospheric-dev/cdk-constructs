@@ -16,8 +16,8 @@
     <maven.compiler.target>11</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <aws-cdk-lib.version>2.12.0</aws-cdk-lib.version>
-    <constructs.version>10.0.63</constructs.version>
+    <aws-cdk-lib.version>2.15.0</aws-cdk-lib.version>
+    <constructs.version>10.0.76</constructs.version>
   </properties>
 
   <organization>
@@ -93,7 +93,7 @@
           <plugin>
             <groupId>org.sonatype.plugins</groupId>
             <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.10</version>
+            <version>1.6.12</version>
             <extensions>true</extensions>
             <configuration>
               <serverId>ossrh</serverId>
