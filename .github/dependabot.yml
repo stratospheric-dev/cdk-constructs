@@ -5,3 +5,6 @@ updates:
     schedule:
       interval: "daily"
       time: "02:00"
+    labels:
+      - "dependabot"
+      - "PR-merge"
