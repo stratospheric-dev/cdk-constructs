@@ -294,7 +294,7 @@ public class Network extends Construct {
         HealthCheck
           .builder()
           .healthyThresholdCount(2)
-          .interval(Duration.seconds(10))
+          .interval(Duration.seconds(5))
           .build()
       )
       .build();
