@@ -321,7 +321,7 @@ public class Service extends Construct {
     private final Map<String, String> environmentVariables;
     private final List<String> securityGroupIdsToGrantIngressFromEcs;
     private List<PolicyStatement> taskRolePolicyStatements = new ArrayList<>();
-    private int healthCheckIntervalSeconds = 5;
+    private int healthCheckIntervalSeconds = 10;
     private String healthCheckPath = "/";
     private int containerPort = 8080;
     private String containerProtocol = "HTTP";
