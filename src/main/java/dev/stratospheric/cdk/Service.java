@@ -442,7 +442,7 @@ public class Service extends Construct {
 
     /**
      * The number of CPU units allocated to each instance of the application. See
-     * <a ahref="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html"?>the docs</a>
+     * <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html">the docs</a>
      * for a table of valid values.
      * <p>
      * Default: 256 (0.25 CPUs).
@@ -454,7 +454,7 @@ public class Service extends Construct {
 
     /**
      * The memory allocated to each instance of the application in megabytes. See
-     * <a ahref="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html"?>the docs</a>
+     * <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html">the docs</a>
      * for a table of valid values.
      * <p>
      * Default: 512.
