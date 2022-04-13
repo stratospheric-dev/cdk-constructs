@@ -223,7 +223,7 @@ public class PostgresDatabase extends Construct {
   public static class DatabaseInputParameters {
     private int storageInGb = 20;
     private String instanceClass = "db.t2.micro";
-    private String postgresVersion = "11.5";
+    private String postgresVersion = "12.9";
 
     /**
      * The storage allocated for the database in GB.

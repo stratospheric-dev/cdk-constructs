@@ -35,7 +35,7 @@ implementation('dev.stratospheric:cdk-constructs:${latestVersion}')
 
 The `latestVersion` is: [![](https://img.shields.io/maven-central/v/dev.stratospheric/cdk-constructs.svg?label=)](https://search.maven.org/search?q=g:%22dev.stratospheric%22%20AND%20a:%22cdk-constructs%22)
 
-Use this version without the `v` prefix inside your `pom.xml` or `build.gradle`: `v0.0.13` -> `0.0.13`.
+Use this version without the `v` prefix inside your `pom.xml` or `build.gradle`: `v0.1.0` -> `0.1.0`.
 
 To override the version of the AWS Java CDK library, use a `<dependencyManagement>` inside your `pom.xml`:
 
@@ -45,7 +45,7 @@ To override the version of the AWS Java CDK library, use a `<dependencyManagemen
     <dependency>
       <groupId>software.amazon.awscdk</groupId>
       <artifactId>aws-cdk-lib</artifactId>
-      <version>2.3.0</version>
+      <version>2.8.0</version>
     </dependency>
   </dependencies>
 </dependencyManagement>

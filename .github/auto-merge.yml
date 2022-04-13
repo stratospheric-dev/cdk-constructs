@@ -1,0 +1,4 @@
+requiredLabels:
+  - PR-merge
+
+reportStatus: true
