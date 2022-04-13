@@ -52,14 +52,6 @@ public class Service extends Construct {
       CfnTargetGroup.TargetGroupAttributeProperty.builder().key("stickiness.type").value("lb_cookie").build(),
       CfnTargetGroup.TargetGroupAttributeProperty.builder().key("stickiness.lb_cookie.duration_seconds").value("3600").build()
     );
-    List<CfnTargetGroup.TargetGroupAttributeProperty> deregistrationDelayConfiguration = List.of(
-      CfnTargetGroup.TargetGroupAttributeProperty.builder().key("deregistration_delay.timeout_seconds").value("5").build()
-    );
-
-    List<CfnTargetGroup.TargetGroupAttributeProperty> targetGroupAttributes = new ArrayList<>(deregistrationDelayConfiguration);
-    if (serviceInputParameters.stickySessionsEnabled) {
-      targetGroupAttributes.addAll(stickySessionConfiguration);
-    }
 
     CfnTargetGroup targetGroup = CfnTargetGroup.Builder.create(this, "targetGroup")
       .healthCheckIntervalSeconds(serviceInputParameters.healthCheckIntervalSeconds)
@@ -69,7 +61,7 @@ public class Service extends Construct {
       .healthCheckTimeoutSeconds(serviceInputParameters.healthCheckTimeoutSeconds)
       .healthyThresholdCount(serviceInputParameters.healthyThresholdCount)
       .unhealthyThresholdCount(serviceInputParameters.unhealthyThresholdCount)
-      .targetGroupAttributes(targetGroupAttributes)
+      .targetGroupAttributes(serviceInputParameters.stickySessionsEnabled ? stickySessionConfiguration : Collections.emptyList())
       .targetType("ip")
       .port(serviceInputParameters.containerPort)
       .protocol(serviceInputParameters.containerProtocol)
@@ -177,7 +169,6 @@ public class Service extends Construct {
         .containerPort(serviceInputParameters.containerPort)
         .build()))
       .environment(toKeyValuePairs(serviceInputParameters.environmentVariables))
-      .stopTimeout(2)
       .build();
 
     CfnTaskDefinition taskDefinition = CfnTaskDefinition.Builder.create(this, "taskDefinition")
@@ -321,7 +312,7 @@ public class Service extends Construct {
     private final Map<String, String> environmentVariables;
     private final List<String> securityGroupIdsToGrantIngressFromEcs;
     private List<PolicyStatement> taskRolePolicyStatements = new ArrayList<>();
-    private int healthCheckIntervalSeconds = 10;
+    private int healthCheckIntervalSeconds = 15;
     private String healthCheckPath = "/";
     private int containerPort = 8080;
     private String containerProtocol = "HTTP";
