@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import software.amazon.awscdk.Duration;
 import software.amazon.awscdk.Environment;
 import software.amazon.awscdk.Tags;
 import software.amazon.awscdk.services.ec2.CfnSecurityGroupIngress;
@@ -20,22 +21,7 @@ import software.amazon.awscdk.services.ec2.SubnetType;
 import software.amazon.awscdk.services.ec2.Vpc;
 import software.amazon.awscdk.services.ecs.Cluster;
 import software.amazon.awscdk.services.ecs.ICluster;
-import software.amazon.awscdk.services.elasticloadbalancingv2.AddApplicationTargetGroupsProps;
-import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationListenerRule;
-import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationListenerRuleProps;
-import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationLoadBalancer;
-import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationProtocol;
-import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationTargetGroup;
-import software.amazon.awscdk.services.elasticloadbalancingv2.BaseApplicationListenerProps;
-import software.amazon.awscdk.services.elasticloadbalancingv2.IApplicationListener;
-import software.amazon.awscdk.services.elasticloadbalancingv2.IApplicationLoadBalancer;
-import software.amazon.awscdk.services.elasticloadbalancingv2.IApplicationTargetGroup;
-import software.amazon.awscdk.services.elasticloadbalancingv2.IListenerCertificate;
-import software.amazon.awscdk.services.elasticloadbalancingv2.ListenerAction;
-import software.amazon.awscdk.services.elasticloadbalancingv2.ListenerCertificate;
-import software.amazon.awscdk.services.elasticloadbalancingv2.ListenerCondition;
-import software.amazon.awscdk.services.elasticloadbalancingv2.RedirectOptions;
-import software.amazon.awscdk.services.elasticloadbalancingv2.TargetType;
+import software.amazon.awscdk.services.elasticloadbalancingv2.*;
 import software.amazon.awscdk.services.ssm.StringParameter;
 import software.constructs.Construct;
 
@@ -303,6 +289,14 @@ public class Network extends Construct {
       .protocol(ApplicationProtocol.HTTP)
       .targetGroupName(prefixWithEnvironmentName("no-op-targetGroup"))
       .targetType(TargetType.IP)
+      .deregistrationDelay(Duration.seconds(5))
+      .healthCheck(
+        HealthCheck
+          .builder()
+          .healthyThresholdCount(2)
+          .interval(Duration.seconds(5))
+          .build()
+      )
       .build();
 
     httpListener = loadBalancer.addListener("httpListener", BaseApplicationListenerProps.builder()

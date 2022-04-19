@@ -65,7 +65,7 @@ public class PostgresDatabase extends Construct {
     // via SSM parameter store.
     Network.NetworkOutputParameters networkOutputParameters = Network.getOutputParametersFromParameterStore(this, applicationEnvironment.getEnvironmentName());
 
-    String username = sanitizeDbName(applicationEnvironment.prefix("dbUser"));
+    String username = sanitizeDbParameterName(applicationEnvironment.prefix("dbUser"));
 
     databaseSecurityGroup = CfnSecurityGroup.Builder.create(this, "databaseSecurityGroup")
       .vpcId(networkOutputParameters.getVpcId())
@@ -95,7 +95,7 @@ public class PostgresDatabase extends Construct {
       .allocatedStorage(String.valueOf(databaseInputParameters.storageInGb))
       .availabilityZone(networkOutputParameters.getAvailabilityZones().get(0))
       .dbInstanceClass(databaseInputParameters.instanceClass)
-      .dbName(sanitizeDbName(applicationEnvironment.prefix("database")))
+      .dbName(sanitizeDbParameterName(applicationEnvironment.prefix("database")))
       .dbSubnetGroupName(subnetGroup.getDbSubnetGroupName())
       .engine("postgres")
       .engineVersion(databaseInputParameters.postgresVersion)
@@ -199,8 +199,8 @@ public class PostgresDatabase extends Construct {
 
   }
 
-  private String sanitizeDbName(String dbName) {
-    return dbName
+  private String sanitizeDbParameterName(String dbParameterName) {
+    return dbParameterName
       // db name must have only alphanumerical characters
       .replaceAll("[^a-zA-Z0-9]", "")
       // db name must start with a letter

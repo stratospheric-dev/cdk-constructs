@@ -52,7 +52,7 @@ public class ApplicationEnvironment {
    * Prefixes a string with the application name and environment name.
    */
   public String prefix(String string) {
-    return this.toString() + "-" + string;
+    return this + "-" + string;
   }
 
   /**
@@ -60,7 +60,7 @@ public class ApplicationEnvironment {
    * characters from the name.
    */
   public String prefix(String string, int characterLimit) {
-    String name = this.toString() + "-" + string;
+    String name = this + "-" + string;
     if (name.length() <= characterLimit) {
       return name;
     }
