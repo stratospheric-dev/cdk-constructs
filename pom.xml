@@ -16,7 +16,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <aws-cdk-lib.version>2.23.0</aws-cdk-lib.version>
-    <constructs.version>10.0.130</constructs.version>
+    <constructs.version>10.1.1</constructs.version>
   </properties>
 
   <organization>
