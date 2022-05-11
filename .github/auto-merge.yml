@@ -1,4 +1,10 @@
+minApprovals:
+  NONE: 0
+
 requiredLabels:
   - PR-merge
+
+updateBranch: true
+deleteBranchAfterMerge: true
 
 reportStatus: true
