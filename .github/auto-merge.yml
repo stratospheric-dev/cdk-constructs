@@ -1,5 +1,5 @@
 minApprovals:
-  NONE: 0
+  MEMBER: 1
 
 requiredLabels:
   - PR-merge
