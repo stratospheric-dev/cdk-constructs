@@ -1,8 +1,5 @@
-minApprovals:
-  MEMBER: 1
-
 requiredLabels:
-  - PR-merge
+- PR-merge
 
 updateBranch: true
 deleteBranchAfterMerge: true
