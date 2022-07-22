@@ -1,4 +1,7 @@
 requiredLabels:
-  - PR-merge
+- PR-merge
+
+updateBranch: true
+deleteBranchAfterMerge: true
 
 reportStatus: true
