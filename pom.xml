@@ -3,7 +3,7 @@
 
   <groupId>dev.stratospheric</groupId>
   <artifactId>cdk-constructs</artifactId>
-  <version>0.1.10-SNAPSHOT</version>
+  <version>0.1.10</version>
   <packaging>jar</packaging>
 
   <name>CDK Constructs</name>
@@ -57,7 +57,7 @@
     <connection>scm:git:git://github.com/stratospheric-dev/cdk-constructs.git</connection>
     <developerConnection>scm:git:https://github.com/stratospheric-dev/cdk-constructs.git</developerConnection>
     <url>https://github.com/stratospheric-dev/cdk-constructs</url>
-    <tag>cdk-constructs-0.0.23</tag>
+    <tag>cdk-constructs-0.1.10</tag>
   </scm>
 
   <distributionManagement>
