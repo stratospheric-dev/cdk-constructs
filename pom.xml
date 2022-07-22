@@ -111,6 +111,12 @@
       <groupId>software.amazon.awscdk</groupId>
       <artifactId>aws-cdk-lib</artifactId>
       <version>${aws-cdk-lib.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>software.constructs</groupId>
