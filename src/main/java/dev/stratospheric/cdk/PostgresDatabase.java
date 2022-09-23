@@ -34,6 +34,7 @@ import software.constructs.Construct;
  *     <li><strong>&lt;environmentName&gt;-&lt;applicationName&gt;-Database-databaseName:</strong> name of the database</li>
  *     <li><strong>&lt;environmentName&gt;-&lt;applicationName&gt;-Database-securityGroupId:</strong> ID of the database's security group</li>
  *     <li><strong>&lt;environmentName&gt;-&lt;applicationName&gt;-Database-secretArn:</strong> ARN of the secret that stores the fields "username" and "password"</li>
+ *     <li><strong>&lt;environmentName&gt;-&lt;applicationName&gt;-Database-instanceId:</strong> ID of the database</li>
  * </ul>
  * The static getter methods provide a convenient access to retrieve these parameters from the parameter store
  * for use in other stacks.
@@ -45,6 +46,7 @@ public class PostgresDatabase extends Construct {
   private static final String PARAMETER_DATABASE_NAME = "databaseName";
   private static final String PARAMETER_SECURITY_GROUP_ID = "securityGroupId";
   private static final String PARAMETER_SECRET_ARN = "secretArn";
+  private static final String PARAMETER_INSTANCE_ID = "instanceId";
   private final CfnSecurityGroup databaseSecurityGroup;
   private final CfnDBInstance dbInstance;
   private final ISecret databaseSecret;
@@ -197,6 +199,10 @@ public class PostgresDatabase extends Construct {
       .stringValue(this.databaseSecret.getSecretArn())
       .build();
 
+    StringParameter instanceId = StringParameter.Builder.create(this, "instanceId")
+      .parameterName(createParameterName(this.applicationEnvironment, PARAMETER_INSTANCE_ID))
+      .stringValue(this.dbInstance.getDbInstanceIdentifier())
+      .build();
   }
 
   private String sanitizeDbParameterName(String dbParameterName) {
