@@ -51,6 +51,7 @@ public class PostgresDatabase extends Construct {
   private final CfnDBInstance dbInstance;
   private final ISecret databaseSecret;
   private final ApplicationEnvironment applicationEnvironment;
+
   public PostgresDatabase(
     final Construct scope,
     final String id,
@@ -94,6 +95,7 @@ public class PostgresDatabase extends Construct {
       .build();
 
     dbInstance = CfnDBInstance.Builder.create(this, "postgresInstance")
+      .dbInstanceIdentifier(applicationEnvironment.prefix("database"))
       .allocatedStorage(String.valueOf(databaseInputParameters.storageInGb))
       .availabilityZone(networkOutputParameters.getAvailabilityZones().get(0))
       .dbInstanceClass(databaseInputParameters.instanceClass)
@@ -139,7 +141,13 @@ public class PostgresDatabase extends Construct {
       getEndpointPort(scope, environment),
       getDbName(scope, environment),
       getDatabaseSecretArn(scope, environment),
-      getDatabaseSecurityGroupId(scope, environment));
+      getDatabaseSecurityGroupId(scope, environment),
+      getDatabaseIdentifier(scope, environment));
+  }
+
+  private static String getDatabaseIdentifier(Construct scope, ApplicationEnvironment environment) {
+    return StringParameter.fromStringParameterName(scope, PARAMETER_INSTANCE_ID, createParameterName(environment, PARAMETER_INSTANCE_ID))
+      .getStringValue();
   }
 
   private static String getEndpointAddress(Construct scope, ApplicationEnvironment environment) {
@@ -222,8 +230,8 @@ public class PostgresDatabase extends Construct {
       this.dbInstance.getAttrEndpointPort(),
       this.dbInstance.getDbName(),
       this.databaseSecurityGroup.getAttrGroupId(),
-      this.databaseSecret.getSecretArn()
-    );
+      this.databaseSecret.getSecretArn(),
+      this.dbInstance.getDbInstanceIdentifier());
   }
 
   public static class DatabaseInputParameters {
@@ -271,19 +279,21 @@ public class PostgresDatabase extends Construct {
     private final String dbName;
     private final String databaseSecretArn;
     private final String databaseSecurityGroupId;
+    private final String instanceId;
 
     public DatabaseOutputParameters(
       String endpointAddress,
       String endpointPort,
       String dbName,
       String databaseSecretArn,
-      String databaseSecurityGroupId
-    ) {
+      String databaseSecurityGroupId,
+      String instanceId) {
       this.endpointAddress = endpointAddress;
       this.endpointPort = endpointPort;
       this.dbName = dbName;
       this.databaseSecretArn = databaseSecretArn;
       this.databaseSecurityGroupId = databaseSecurityGroupId;
+      this.instanceId = instanceId;
     }
 
     /**
@@ -321,6 +331,12 @@ public class PostgresDatabase extends Construct {
     public String getDatabaseSecurityGroupId() {
       return databaseSecurityGroupId;
     }
-  }
 
+    /**
+     * The database's identifier.
+     */
+    public String getInstanceId() {
+      return instanceId;
+    }
+  }
 }
