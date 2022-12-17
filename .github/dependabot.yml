@@ -8,3 +8,8 @@ updates:
     labels:
       - "dependabot"
       - "PR-merge"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
