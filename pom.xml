@@ -15,7 +15,7 @@
     <maven.compiler.target>11</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <aws-cdk-lib.version>2.53.0</aws-cdk-lib.version>
+    <aws-cdk-lib.version>2.63.0</aws-cdk-lib.version>
     <constructs.version>10.1.175</constructs.version>
     <jackson.version>2.14.1</jackson.version>
   </properties>
