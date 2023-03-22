@@ -64,7 +64,7 @@ public class ApplicationEnvironment {
     if (name.length() <= characterLimit) {
       return name;
     }
-    return name.substring(name.length() - 21);
+    return name.substring(name.length() - characterLimit);
   }
 
   public void tag(IConstruct construct) {
