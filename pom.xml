@@ -3,7 +3,7 @@
 
   <groupId>dev.stratospheric</groupId>
   <artifactId>cdk-constructs</artifactId>
-  <version>0.1.12-SNAPSHOT</version>
+  <version>0.1.14-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>CDK Constructs</name>
