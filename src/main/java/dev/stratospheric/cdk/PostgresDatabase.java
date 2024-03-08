@@ -104,7 +104,7 @@ public class PostgresDatabase extends Construct {
       .engine("postgres")
       .engineVersion(databaseInputParameters.postgresVersion)
       .masterUsername(username)
-      .masterUserPassword(databaseSecret.secretValueFromJson("password").toString())
+      .masterUserPassword(databaseSecret.secretValueFromJson("password").unsafeUnwrap())
       .publiclyAccessible(false)
       .vpcSecurityGroups(Collections.singletonList(databaseSecurityGroup.getAttrGroupId()))
       .build();
