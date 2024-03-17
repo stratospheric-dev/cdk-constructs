@@ -107,7 +107,7 @@ public class Service extends Construct {
       .actions(singletonList(actionProperty))
       .conditions(singletonList(condition))
       .listenerArn(networkOutputParameters.getHttpListenerArn())
-      .priority(2)
+      .priority(serviceInputParameters.httpListenerPriority)
       .build();
 
     LogGroup logGroup = LogGroup.Builder.create(this, "ecsLogGroup")
@@ -335,6 +335,7 @@ public class Service extends Construct {
     private int minimumHealthyInstancesPercent = 50;
     private boolean stickySessionsEnabled = false;
     private String awslogsDateTimeFormat = "%Y-%m-%dT%H:%M:%S.%f%z";
+    private int httpListenerPriority = 2;
 
     /**
      * Knobs and dials you can configure to run a Docker image in an ECS service. The default values are set in a way
@@ -537,6 +538,15 @@ public class Service extends Construct {
      */
     public ServiceInputParameters withAwsLogsDateTimeFormat(String awsLogsDateTimeFormat) {
       this.awslogsDateTimeFormat = awsLogsDateTimeFormat;
+      return this;
+    }
+
+    /**
+     * The priority for the HTTP listener of the loadbalancer. The priority of two listeners must not be the same
+     * so you need to choose different priorities for different services.
+     */
+    public ServiceInputParameters withHttpListenerPriority(int priority) {
+      this.httpListenerPriority = priority;
       return this;
     }
 
