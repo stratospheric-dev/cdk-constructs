@@ -229,8 +229,8 @@ public class PostgresDatabase extends Construct {
       this.dbInstance.getAttrEndpointAddress(),
       this.dbInstance.getAttrEndpointPort(),
       this.dbInstance.getDbName(),
-      this.databaseSecurityGroup.getAttrGroupId(),
       this.databaseSecret.getSecretArn(),
+      this.databaseSecurityGroup.getAttrGroupId(),
       this.dbInstance.getDbInstanceIdentifier());
   }
 
