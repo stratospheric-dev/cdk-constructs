@@ -15,7 +15,7 @@
     <maven.compiler.target>11</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <aws-cdk-lib.version>2.131.0</aws-cdk-lib.version>
+    <aws-cdk-lib.version>2.144.0</aws-cdk-lib.version>
     <constructs.version>10.3.0</constructs.version>
     <jackson.version>2.16.1</jackson.version>
   </properties>
@@ -127,7 +127,7 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>3.25.3</version>
+      <version>3.26.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
