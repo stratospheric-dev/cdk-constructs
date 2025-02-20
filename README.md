@@ -92,8 +92,13 @@ public class DatabaseApp {
     environmentName
   );
 
+  Stack networkStack = new Stack(app, "DatabaseStack", StackProps.builder()
+    .stackName(environmentName + "-Database")
+    .env(awsEnvironment)
+    .build());
+
   PostgresDatabase database = new PostgresDatabase(
-    app,
+    networkStack,
     "Database",
     awsEnvironment,
     applicationEnvironment,
